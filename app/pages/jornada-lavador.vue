@@ -10,13 +10,11 @@
       @save="handleSaveJornada"
       @cancel="handleCancel"
     />
-    <Toast />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useToast } from 'primevue/usetoast'
 import JornadaLavadorPageHeader from '@/components/jornada-lavador/JornadaLavadorPageHeader.vue'
 import JornadaLavadorSummary from '@/components/jornada-lavador/JornadaLavadorSummary.vue'
 import JornadaLavadorTable from '@/components/jornada-lavador/JornadaLavadorTable.vue'
@@ -28,7 +26,6 @@ definePageMeta({
   layout: 'default'
 })
 
-const toast = useToast()
 const showModal = ref(false)
 const modalMode = ref<'create' | 'edit'>('create')
 const jornadaEdicao = ref<JornadaLavador | null>(null)
@@ -57,19 +54,11 @@ const handleSaveJornada = (data: JornadaLavador) => {
     if (index !== -1) {
       jornadas.value[index] = { ...data }
     }
-    toast.add({
-      severity: 'success',
-      summary: 'Sucesso',
-      detail: 'Jornada atualizada com sucesso.'
-    })
+    alert('Jornada atualizada com sucesso!')
   } else {
     const newId = String(jornadas.value.length + 1)
     jornadas.value.push({ ...data, id: newId })
-    toast.add({
-      severity: 'success',
-      summary: 'Sucesso',
-      detail: 'Jornada cadastrada com sucesso.'
-    })
+    alert('Jornada cadastrada com sucesso!')
   }
   summary.value = jornadaLavadorSummary()
 }

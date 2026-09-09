@@ -1,19 +1,12 @@
-import { ref } from 'vue'
-import { Dialog } from 'primevue/dialog'
-import { Button } from 'primevue/button'
-import { InputNumber } from 'primevue/inputnumber'
-import { Dropdown } from 'primevue/dropdown'
-import { Toast } from 'primevue/toast'
-
-export type JornadaLavador = {
+export interface JornadaLavador {
   id: string
   regime: 'NORMAL' | 'PLANTAO'
   horas_disponiveis: number
-  created_at?: string
-  updated_at?: string
+  created_at: string
+  updated_at: string
 }
 
-export type JornadaLavadorSummary = {
+export interface JornadaLavadorSummary {
   totalRegimes: number
   normalHours: number
   plantaoHours: number
@@ -21,24 +14,34 @@ export type JornadaLavadorSummary = {
 }
 
 export const jornadasLavadorMock: JornadaLavador[] = [
-  { id: '1', regime: 'NORMAL', horas_disponiveis: 8, created_at: '2025-01-15T10:00:00Z' },
-  { id: '2', regime: 'PLANTAO', horas_disponiveis: 6, created_at: '2025-01-16T14:30:00Z' }
+  {
+    id: '1',
+    regime: 'NORMAL',
+    horas_disponiveis: 8,
+    created_at: '2025-01-15T10:00:00.000Z',
+    updated_at: '2025-01-15T10:00:00.000Z'
+  },
+  {
+    id: '2',
+    regime: 'PLANTAO',
+    horas_disponiveis: 6,
+    created_at: '2025-01-16T14:30:00.000Z',
+    updated_at: '2025-01-16T14:30:00.000Z'
+  }
 ]
 
-export const jornadaLavadorSummary = () => {
-  const totalRegimes = jornadasLavadorMock.length
-  const normalHours = jornadasLavadorMock
-    .filter(j => j.regime === 'NORMAL')
-    .reduce((sum, j) => sum + j.horas_disponiveis, 0)
-  const plantaoHours = jornadasLavadorMock
-    .filter(j => j.regime === 'PLANTAO')
-    .reduce((sum, j) => sum + j.horas_disponiveis, 0)
-  const averageCapacity = (normalHours + plantaoHours) / totalRegimes
+export const jornadaLavadorSummary: JornadaLavadorSummary = {
+  totalRegimes: 2,
+  normalHours: 8,
+  plantaoHours: 6,
+  averageCapacity: 7
+}
 
+export function getJornadaSummary(): JornadaLavadorSummary {
   return {
-    totalRegimes: totalRegimes.toString(),
-    normalHours: normalHours.toString(),
-    plantaoHours: plantaoHours.toString(),
-    averageCapacity: averageCapacity.toFixed(1)
+    totalRegimes: 2,
+    normalHours: 8,
+    plantaoHours: 6,
+    averageCapacity: 7
   }
 }
