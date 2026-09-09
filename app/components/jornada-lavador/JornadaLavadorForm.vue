@@ -1,30 +1,90 @@
 <template>
   <div class="jornada-lavador-form">
     <div class="jornada-lavador-form-field">
-      <label class="jornada-lavador-form-label" for="jornada-regime">Regime</label>
-      <select id="jornada-regime" class="jornada-lavador-form-select">
-        <option value="NORMAL">NORMAL</option>
-        <option value="PLANTAO">PLANTAO</option>
-      </select>
+      <label for="regime" class="jornada-lavador-form-label">Regime</label>
+      <Dropdown
+        id="regime"
+        v-model="formData.regime"
+        :options="regimeOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecione o regime"
+        :disabled="mode === 'edit'"
+        class="jornada-lavador-form-dropdown"
+        :class="{ 'p-invalid': submitted && !formData.regime }"
+      />
+      <small v-if="submitted && !formData.regime" class="p-error">Regime é obrigatório</small>
     </div>
 
     <div class="jornada-lavador-form-field">
-      <label class="jornada-lavador-form-label" for="jornada-horas">Horas disponíveis</label>
-      <input
-        id="jornada-horas"
-        type="number"
-        placeholder="8"
+      <label for="horas" class="jornada-lavador-form-label">Horas Disponíveis</label>
+      <InputNumber
+        id="horas"
+        v-model="formData.horas_disponiveis"
+        :min="0.5"
+        :step="0.5"
+        placeholder="0.0"
         class="jornada-lavador-form-input"
+        :class="{ 'p-invalid': submitted && !formData.horas_disponiveis }"
       />
-      <span class="jornada-lavador-form-unidade">horas</span>
-      <p class="jornada-lavador-form-auxilio">
-        Informar a quantidade de horas disponíveis para este regime.
-      </p>
+      <small v-if="submitted && !formData.horas_disponiveis" class="p-error">Horas disponíveis é obrigatório</small>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, watch, onMounted } from 'vue'
+import { Dropdown } from 'primevue/dropdown'
+import { InputNumber } from 'primevue/inputnumber'
+import type { JornadaLavador } from '@/utils/jornadaLavadorMock'
+
+interface RegimeOption {
+  label: string
+  value: 'NORMAL' | 'PLANTAO'
+}
+
+const regimeOptions: RegimeOption[] = [
+  { label: 'NORMAL', value: 'NORMAL' },
+  { label: 'PLANTAO', value: 'PLANTAO' }
+]
+
+interface Props {
+  initialData?: JornadaLavador | null
+  mode?: 'create' | 'edit'
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  initialData: null,
+  mode: 'create'
+})
+
+const submitted = ref(false)
+const formData = ref({
+  regime: undefined as 'NORMAL' | 'PLANTAO' | undefined,
+  horas_disponiveis: undefined as number | undefined
+})
+
+watch(() => props.initialData, (newData) => {
+  if (newData) {
+    formData.value = {
+      regime: newData.regime,
+      horas_disponiveis: newData.horas_disponiveis
+    }
+  }
+}, { immediate: true })
+
+const emit = defineEmits(['update:formData', 'validate'])
+
+const validate = () => {
+  submitted.value = true
+  const isValid = !!(formData.value.regime && formData.value.horas_disponiveis)
+  emit('validate', isValid)
+  if (isValid) {
+    emit('update:formData', { ...formData.value })
+  }
+}
+
+defineExpose({ validate })
 </script>
 
 <style scoped>
@@ -32,6 +92,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  padding: 8px 0;
 }
 
 .jornada-lavador-form-field {
@@ -42,42 +103,24 @@
 
 .jornada-lavador-form-label {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: #333;
 }
 
+.jornada-lavador-form-dropdown,
 .jornada-lavador-form-input {
   width: 100%;
-  padding: 10px 12px;
+}
+
+.jornada-lavador-form-dropdown .p-select-label,
+.jornada-lavador-form-input .p-inputnumber-input {
+  min-height: 42px;
   font-size: 14px;
-  color: #1f2937;
-  background: #fff;
-  border: 2px solid #d1d5db;
-  border-radius: 8px;
-  outline: none;
-  box-sizing: border-box;
-  font-family: inherit;
-  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.jornada-lavador-form-input::placeholder {
-  color: #9ca3af;
-}
-
-.jornada-lavador-form-input:focus {
-  border-color: #004790;
-  box-shadow: 0 0 0 3px rgba(0, 71, 144, 0.15);
-}
-
-.jornada-lavador-form-unidade {
-  margin-left: 8px;
-  font-size: 14px;
-  color: #6b7280;
-}
-
-.jornada-lavador-form-auxilio {
+.p-error {
+  color: #ef4444;
   font-size: 12px;
-  color: #9ca3af;
   margin-top: 4px;
 }
 </style>

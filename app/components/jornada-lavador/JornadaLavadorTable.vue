@@ -10,7 +10,12 @@
           </tr>
         </thead>
         <tbody>
-          <JornadaLavadorTableRow v-for="jornada in jornadas" :key="jornada.id" :jornada="jornada" />
+          <JornadaLavadorTableRow
+            v-for="jornada in jornadas"
+            :key="jornada.id"
+            :jornada="jornada"
+            @edit="$emit('edit', $event)"
+          />
         </tbody>
       </table>
     </div>
@@ -25,9 +30,14 @@
 import JornadaLavadorTableRow from './JornadaLavadorTableRow.vue'
 import JornadaLavadorPagination from './JornadaLavadorPagination.vue'
 import JornadaLavadorEmptyState from './JornadaLavadorEmptyState.vue'
-import { jornadasLavadorMock } from '@/utils/jornadaLavadorMock'
+import type { JornadaLavador } from '@/utils/jornadaLavadorMock'
 
-const jornadas = jornadasLavadorMock
+interface Props {
+  jornadas: JornadaLavador[]
+}
+
+defineProps<Props>()
+defineEmits(['edit'])
 </script>
 
 <style scoped>

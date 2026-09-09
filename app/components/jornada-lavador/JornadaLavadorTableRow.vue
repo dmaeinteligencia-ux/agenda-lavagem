@@ -11,7 +11,7 @@
       </span>
     </td>
     <td class="jornada-lavador-table-cell">
-      <button type="button" class="jornada-lavador-table-cell-acao-btn" title="Editar" aria-label="Editar jornada">
+      <button type="button" class="jornada-lavador-table-cell-acao-btn" title="Editar" aria-label="Editar jornada" @click="$emit('edit', jornada)">
         <PencilSquareIcon aria-hidden="true" />
       </button>
     </td>
@@ -20,12 +20,13 @@
 
 <script setup lang="ts">
 import { PencilSquareIcon } from '@heroicons/vue/24/outline'
-import type { JornadaLavadorMock } from '@/utils/jornadaLavadorMock'
+import type { JornadaLavador } from '@/utils/jornadaLavadorMock'
 
 interface Props {
-  jornada: JornadaLavadorMock
+  jornada: JornadaLavador
 }
 
+const emit = defineEmits(['edit'])
 defineProps<Props>()
 </script>
 

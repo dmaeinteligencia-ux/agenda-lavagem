@@ -1,237 +1,218 @@
 <template>
-  <div class="jornada-lavador-modal-overlay" role="presentation">
-    <div
-      class="jornada-lavador-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="jornada-lavador-modal-title-create"
-    >
-      <header class="jornada-lavador-modal-header">
-        <div class="jornada-lavador-modal-header-text">
-          <h2 id="jornada-lavador-modal-title-create" class="jornada-lavador-modal-title">
-            Nova Jornada
-          </h2>
+  <Dialog
+    :visible="isVisible"
+    :header="modalTitle"
+    :modal="true"
+    :style="{ width: '550px' }"
+    :closable="true"
+    :dismissableMask="true"
+    @update:visible="onVisibleUpdate"
+    @hide="onHide"
+    class="jornada-lavador-modal"
+  >
+    <template #header>
+      <div class="jornada-lavador-modal-header">
+        <div>
+          <h3 class="jornada-lavador-modal-title">{{ modalTitle }}</h3>
           <p class="jornada-lavador-modal-subtitle">
-            Cadastre uma nova jornada e defina o tempo configurado.
+            {{ mode === 'edit' ? 'Atualize as informações da jornada.' : 'Cadastre uma nova jornada e defina o tempo configurado.' }}
           </p>
         </div>
-        <button
-          type="button"
-          class="jornada-lavador-modal-close"
-          aria-label="Fechar"
-        >
-          <XMarkIcon aria-hidden="true" />
-        </button>
-      </header>
-
-      <div class="jornada-lavador-modal-body">
-        <JornadaLavadorForm :mode="mode" :jornada="jornadaEdicao" />
       </div>
+    </template>
 
-      <footer class="jornada-lavador-modal-footer">
-        <button type="button" class="jornada-lavador-modal-btn jornada-lavador-modal-btn--secondary">
-          Cancelar
-        </button>
-        <button
-          type="button"
-          class="jornada-lavador-modal-btn jornada-lavador-modal-btn--primary"
-        >
-          Salvar
-        </button>
-      </footer>
+    <div class="jornada-lavador-modal-body">
+      <JornadaLavadorForm
+        ref="formRef"
+        :initialData="jornadaEdicao"
+        :mode="mode"
+        @update:formData="formData = $event"
+        @validate="onValidate"
+      />
     </div>
-  </div>
+
+    <template #footer>
+      <div class="jornada-lavador-modal-footer">
+        <Button
+          label="Cancelar"
+          class="p-button-outlined"
+          @click="onCancel"
+          :disabled="loading"
+        />
+        <Button
+          :label="mode === 'edit' ? 'Salvar alterações' : 'Salvar'"
+          class="p-button-primary"
+          @click="onSave"
+          :loading="loading"
+        />
+      </div>
+    </template>
+  </Dialog>
 </template>
 
-<script setup lang="ts">
-import { XMarkIcon } from '@heroicons/vue/24/outline'
+<script setup lang="ts>
+import { ref, computed, watch } from 'vue'
+import { Dialog } from 'primevue/dialog'
+import { Button } from 'primevue/button'
 import JornadaLavadorForm from './JornadaLavadorForm.vue'
+import type { JornadaLavador } from '@/utils/jornadaLavadorMock'
 
 interface Props {
+  visible: boolean
   mode?: 'create' | 'edit'
-  jornadaEdicao?: any
+  jornadaEdicao?: JornadaLavador | null
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
+  visible: false,
   mode: 'create',
   jornadaEdicao: null
+})
+
+const emit = defineEmits(['update:visible', 'save', 'cancel'])
+
+const formRef = ref<InstanceType<typeof JornadaLavadorForm>>()
+const formData = ref<JornadaLavador | null>(null)
+const loading = ref(false)
+const submitted = ref(false)
+
+const modalTitle = computed(() => props.mode === 'edit' ? 'Editar Jornada' : 'Nova Jornada')
+
+const isVisible = ref(props.visible)
+
+watch(() => props.visible, (newVal) => {
+  isVisible.value = newVal
+})
+
+const onVisibleUpdate = (value: boolean) => {
+  isVisible.value = value
+  emit('update:visible', value)
+}
+
+const onHide = () => {
+  isVisible.value = false
+  emit('update:visible', false)
+}
+
+const onCancel = () => {
+  isVisible.value = false
+  emit('update:visible', false)
+  emit('cancel')
+}
+
+const onValidate = (isValid: boolean) => {
+  submitted.value = !isValid
+}
+
+const onSave = () => {
+  if (formRef.value && formData.value) {
+    formRef.value.validate()
+    if (!submitted.value) {
+      loading.value = true
+      emit('save', { ...formData.value })
+      setTimeout(() => {
+        loading.value = false
+        isVisible.value = false
+        emit('update:visible', false)
+      }, 600)
+    }
+  }
+}
+
+watch(() => props.visible, (newVal) => {
+  if (!newVal) {
+    submitted.value = false
+    formData.value = null
+  }
 })
 </script>
 
 <style scoped>
-.jornada-lavador-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(17, 24, 39, 0.55);
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
+.jornada-lavador-modal :deep(.p-dialog-header) {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
 }
 
-.jornada-lavador-modal {
+.jornada-lavador-modal :deep(.p-dialog-content) {
+  padding: 0;
+}
+
+.jornada-lavador-modal :deep(.p-dialog-footer) {
+  padding: 0;
+  border-top: none;
   background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
-  width: 100%;
-  max-width: 600px;
-  max-height: calc(100vh - 32px);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
 }
 
 .jornada-lavador-modal-header {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 24px 28px 20px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.jornada-lavador-modal-header-text {
-  display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 0;
 }
 
 .jornada-lavador-modal-title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: #111827;
   margin: 0;
 }
 
 .jornada-lavador-modal-subtitle {
-  font-size: 14px;
+  font-size: 13px;
   color: #6b7280;
   margin: 0;
 }
 
-.jornada-lavador-modal-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: transparent;
-  border-radius: 8px;
-  color: #6b7280;
-  cursor: pointer;
-  transition: background-color 0.15s, color 0.15s;
-  flex-shrink: 0;
-}
-
-.jornada-lavador-modal-close:hover {
-  background: #f3f4f6;
-  color: #111827;
-}
-
-.jornada-lavador-modal-close:focus-visible {
-  outline: 2px solid #004790;
-  outline-offset: -2px;
-}
-
-.jornada-lavador-modal-close svg {
-  width: 20px;
-  height: 20px;
-}
-
 .jornada-lavador-modal-body {
-  padding: 24px 28px;
-  overflow-y: auto;
-  flex: 1;
+  padding: 24px;
 }
 
 .jornada-lavador-modal-footer {
   display: flex;
-  align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  padding: 16px 28px 20px;
-  border-top: 1px solid #e5e7eb;
+  padding: 16px 24px;
   background: #f9fafb;
-  flex-wrap: wrap;
+  border-top: 1px solid #e5e7eb;
 }
 
-.jornada-lavador-modal-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 22px;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.1s;
-}
-
-.jornada-lavador-modal-btn--primary {
+.jornada-lavador-modal :deep(.p-button-primary) {
   background-color: #004790;
-  color: #fff;
-  border: 1px solid #004790;
+  border-color: #004790;
+  font-weight: 600;
 }
 
-.jornada-lavador-modal-btn--primary:hover {
+.jornada-lavador-modal :deep(.p-button-primary:hover) {
   background-color: #003570;
   border-color: #003570;
 }
 
-.jornada-lavador-modal-btn--primary:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 71, 144, 0.35);
-}
-
-.jornada-lavador-modal-btn--secondary {
-  background: #fff;
+.jornada-lavador-modal :deep(.p-button-outlined) {
   color: #4b5563;
-  border: 1px solid #d1d5db;
+  border-color: #d1d5db;
 }
 
-.jornada-lavador-modal-btn--secondary:hover {
+.jornada-lavador-modal :deep(.p-button-outlined:hover) {
   background: #f3f4f6;
-}
-
-.jornada-lavador-modal-btn--secondary:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 71, 144, 0.25);
+  border-color: #9ca3af;
 }
 
 @media (max-width: 600px) {
-  .jornada-lavador-modal-overlay {
-    padding: 8px;
-    align-items: flex-end;
+  .jornada-lavador-modal :deep(.p-dialog) {
+    width: 95vw !important;
+    margin: 12px;
   }
-
-  .jornada-lavador-modal {
-    max-width: 100%;
-    max-height: 92vh;
-  }
-
-  .jornada-lavador-modal-header {
-    padding: 20px 20px 16px;
-  }
-
-  .jornada-lavador-modal-title {
-    font-size: 18px;
-  }
-
+  
   .jornada-lavador-modal-body {
-    padding: 20px;
+    padding: 16px;
   }
-
+  
   .jornada-lavador-modal-footer {
-    padding: 14px 20px 16px;
     flex-direction: column-reverse;
-    align-items: stretch;
+    padding: 12px 16px;
   }
-
-  .jornada-lavador-modal-btn {
+  
+  .jornada-lavador-modal-footer .p-button {
     width: 100%;
   }
 }
