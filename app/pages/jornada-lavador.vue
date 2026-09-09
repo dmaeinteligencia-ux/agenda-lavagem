@@ -30,7 +30,7 @@ const showModal = ref(false)
 const modalMode = ref<'create' | 'edit'>('create')
 const jornadaEdicao = ref<JornadaLavador | null>(null)
 const jornadas = ref<JornadaLavador[]>([])
-const summary = ref(jornadaLavadorSummary())
+const summary = ref(jornadaLavadorSummary)
 
 onMounted(() => {
   jornadas.value = [...jornadasLavadorMock]
@@ -60,7 +60,7 @@ const handleSaveJornada = (data: JornadaLavador) => {
     jornadas.value.push({ ...data, id: newId })
     alert('Jornada cadastrada com sucesso!')
   }
-  summary.value = jornadaLavadorSummary()
+  summary.value = jornadaLavadorSummary
 }
 
 const handleCancel = () => {
