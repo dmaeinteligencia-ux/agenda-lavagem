@@ -2,9 +2,14 @@
   <header class="jornada-lavador-page-header">
     <div class="jornada-lavador-page-header-text">
       <h1 class="jornada-lavador-page-header-title">Jornada do Lavador</h1>
-      <p class="jornada-lavador-page-header-subtitle">Configure a capacidade de funcionamento do lavador por regime.</p>
+      <p class="jornada-lavador-page-header-subtitle">Configure a jornada de funcionamento do lavador por regime.</p>
     </div>
-    <button type="button" class="jornada-lavador-new-jornada-btn" aria-label="Nova Jornada" @click="$emit('new-jornada')">
+    <button
+      type="button"
+      class="jornada-lavador-new-jornada-btn"
+      aria-label="Nova Jornada"
+      @click="$emit('new-jornada')"
+    >
       <PlusIcon class="jornada-lavador-new-jornada-btn-icon" aria-hidden="true" />
       Nova Jornada
     </button>
@@ -13,7 +18,10 @@
 
 <script setup lang="ts">
 import { PlusIcon } from '@heroicons/vue/24/outline'
-defineEmits(['new-jornada'])
+
+defineEmits<{
+  'new-jornada': []
+}>()
 </script>
 
 <style scoped>

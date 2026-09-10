@@ -4,15 +4,15 @@
       title="Total"
       :value="summary.total"
       description="Reservas no período"
-      :icon="ClipboardIcon"
+      :icon="ClipboardDocumentListIcon"
       variant="blue"
     />
     <AgendaSummaryCard
       title="Reservadas"
       :value="summary.reserved"
       description="Agendadas"
-      :icon="CalendarIcon"
-      variant="blue"
+      :icon="CalendarDaysIcon"
+      variant="red"
     />
     <AgendaSummaryCard
       title="Em Lavagem"

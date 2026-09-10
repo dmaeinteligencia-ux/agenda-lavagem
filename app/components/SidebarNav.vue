@@ -11,13 +11,13 @@
     <Transition name="slide">
       <aside v-if="isOpen" class="sidebar sidebar--drawer" role="navigation" aria-label="Menu principal">
         <nav class="sidebar-nav">
-<NuxtLink
-          v-for="item in navItems"
-          :key="item.label"
-          :to="item.route"
-          class="sidebar-btn"
-          @click.prevent="close"
-        >
+          <NuxtLink
+            v-for="item in navItems"
+            :key="item.label"
+            :to="item.route"
+            class="sidebar-btn"
+            @click.prevent="close"
+          >
             <component :is="item.icon" class="sidebar-icon" aria-hidden="true" />
             <span class="sidebar-label">{{ item.label }}</span>
           </NuxtLink>
@@ -26,13 +26,13 @@
     </Transition>
     <aside class="sidebar sidebar--desktop" role="navigation" aria-label="Menu principal">
       <nav class="sidebar-nav">
-<NuxtLink
-            v-for="item in navItems"
-            :key="item.label"
-            :to="item.route"
-            class="sidebar-btn"
-            @click.prevent="close"
-          >
+        <NuxtLink
+          v-for="item in navItems"
+          :key="item.label"
+          :to="item.route"
+          class="sidebar-btn"
+          @click.prevent="close"
+        >
           <component :is="item.icon" class="sidebar-icon" aria-hidden="true" />
           <span class="sidebar-label">{{ item.label }}</span>
         </NuxtLink>

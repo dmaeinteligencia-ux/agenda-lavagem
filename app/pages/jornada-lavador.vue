@@ -1,69 +1,79 @@
 <template>
   <div class="jornada-lavador-page">
-    <JornadaLavadorPageHeader @new-jornada="handleNewJornada" />
+    <JornadaLavadorPageHeader @new-jornada="openCreate" />
     <JornadaLavadorSummary :summary="summary" />
-    <JornadaLavadorTable :jornadas="jornadas" @edit="handleEditJornada" />
+    <JornadaLavadorTable
+      :jornadas="jornadas"
+      @edit="openEdit"
+      @new-jornada="openCreate"
+    />
+
     <JornadaLavadorModal
-      v-model:visible="showModal"
+      v-if="showModal"
       :mode="modalMode"
-      :jornadaEdicao="jornadaEdicao"
-      @save="handleSaveJornada"
-      @cancel="handleCancel"
+      :jornada="jornadaEdicao"
+      @close="closeModal"
+      @save="handleSave"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import JornadaLavadorPageHeader from '@/components/jornada-lavador/JornadaLavadorPageHeader.vue'
 import JornadaLavadorSummary from '@/components/jornada-lavador/JornadaLavadorSummary.vue'
 import JornadaLavadorTable from '@/components/jornada-lavador/JornadaLavadorTable.vue'
 import JornadaLavadorModal from '@/components/jornada-lavador/JornadaLavadorModal.vue'
-import { jornadasLavadorMock, jornadaLavadorSummary } from '@/utils/jornadaLavadorMock'
-import type { JornadaLavador } from '@/utils/jornadaLavadorMock'
+import { jornadasLavadorMock, jornadaLavadorSummary, diasPorRegime } from '@/utils/jornadaLavadorMock'
+import type { JornadaLavadorMock, JornadaLavadorFormData } from '@/utils/jornadaLavadorMock'
 
 definePageMeta({
   layout: 'default'
 })
 
+const summary = jornadaLavadorSummary
+const jornadas = ref<JornadaLavadorMock[]>([...jornadasLavadorMock])
 const showModal = ref(false)
 const modalMode = ref<'create' | 'edit'>('create')
-const jornadaEdicao = ref<JornadaLavador | null>(null)
-const jornadas = ref<JornadaLavador[]>([])
-const summary = ref(jornadaLavadorSummary)
+const jornadaEdicao = ref<JornadaLavadorMock | null>(null)
 
-onMounted(() => {
-  jornadas.value = [...jornadasLavadorMock]
-})
-
-const handleNewJornada = () => {
+const openCreate = () => {
   modalMode.value = 'create'
   jornadaEdicao.value = null
   showModal.value = true
 }
 
-const handleEditJornada = (jornada: JornadaLavador) => {
+const openEdit = (jornada: JornadaLavadorMock) => {
   modalMode.value = 'edit'
   jornadaEdicao.value = { ...jornada }
   showModal.value = true
 }
 
-const handleSaveJornada = (data: JornadaLavador) => {
-  if (modalMode.value === 'edit' && jornadaEdicao.value) {
-    const index = jornadas.value.findIndex(j => j.id === data.id)
-    if (index !== -1) {
-      jornadas.value[index] = { ...data }
-    }
-    alert('Jornada atualizada com sucesso!')
-  } else {
-    const newId = String(jornadas.value.length + 1)
-    jornadas.value.push({ ...data, id: newId })
-    alert('Jornada cadastrada com sucesso!')
-  }
-  summary.value = jornadaLavadorSummary
+const closeModal = () => {
+  showModal.value = false
 }
 
-const handleCancel = () => {
+const handleSave = (data: JornadaLavadorFormData) => {
+  if (modalMode.value === 'edit' && jornadaEdicao.value) {
+    const index = jornadas.value.findIndex((j) => j.id === jornadaEdicao.value?.id)
+    if (index !== -1) {
+      jornadas.value[index] = {
+        ...jornadas.value[index],
+        regime: data.regime,
+        dias: diasPorRegime(data.regime),
+        horas: data.horas,
+        disponivel_agendamento: data.disponivel_agendamento
+      }
+    }
+  } else {
+    jornadas.value.push({
+      id: String(Date.now()),
+      regime: data.regime,
+      dias: diasPorRegime(data.regime),
+      horas: data.horas,
+      disponivel_agendamento: data.disponivel_agendamento
+    })
+  }
   showModal.value = false
 }
 </script>

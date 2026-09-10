@@ -3,10 +3,12 @@
     <div class="jornada-lavador-table-container">
       <table class="jornada-lavador-table">
         <thead>
-          <tr class="jornada-lavador-table-header">
-            <th class="jornada-lavador-table-header-cell">Regime</th>
-            <th class="jornada-lavador-table-header-cell">Horas Disponíveis</th>
-            <th class="jornada-lavador-table-header-cell">Ações</th>
+          <tr class="jornada-lavador-header">
+            <th class="jornada-lavador-header-cell">Regime</th>
+            <th class="jornada-lavador-header-cell">Dias de aplicação</th>
+            <th class="jornada-lavador-header-cell">Horas disponíveis</th>
+            <th class="jornada-lavador-header-cell">Agendamento</th>
+            <th class="jornada-lavador-header-cell jornada-lavador-header-cell--acoes">Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -14,30 +16,34 @@
             v-for="jornada in jornadas"
             :key="jornada.id"
             :jornada="jornada"
-            @edit="$emit('edit', $event)"
+            @edit="$emit('edit', jornada)"
           />
         </tbody>
       </table>
     </div>
-
-    <JornadaLavadorEmptyState v-if="jornadas.length === 0" />
   </div>
 
-  <JornadaLavadorPagination />
+  <JornadaLavadorEmptyState
+    v-if="jornadas.length === 0"
+    @new-jornada="$emit('new-jornada')"
+  />
 </template>
 
 <script setup lang="ts">
 import JornadaLavadorTableRow from './JornadaLavadorTableRow.vue'
-import JornadaLavadorPagination from './JornadaLavadorPagination.vue'
 import JornadaLavadorEmptyState from './JornadaLavadorEmptyState.vue'
-import type { JornadaLavador } from '@/utils/jornadaLavadorMock'
+import type { JornadaLavadorMock } from '@/utils/jornadaLavadorMock'
 
 interface Props {
-  jornadas: JornadaLavador[]
+  jornadas: JornadaLavadorMock[]
 }
 
 defineProps<Props>()
-defineEmits(['edit'])
+
+defineEmits<{
+  edit: [jornada: JornadaLavadorMock]
+  'new-jornada': []
+}>()
 </script>
 
 <style scoped>
@@ -56,15 +62,15 @@ defineEmits(['edit'])
 .jornada-lavador-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 600px;
+  min-width: 760px;
 }
 
-.jornada-lavador-table-header {
+.jornada-lavador-header {
   background: #f8fafc;
   border-bottom: 1px solid #e5e7eb;
 }
 
-.jornada-lavador-table-header-cell {
+.jornada-lavador-header-cell {
   padding: 12px 16px;
   text-align: left;
   font-size: 13px;
@@ -75,9 +81,9 @@ defineEmits(['edit'])
   white-space: nowrap;
 }
 
-.jornada-lavador-table-header-cell--acoes {
+.jornada-lavador-header-cell--acoes {
   text-align: right;
-  width: 130px;
+  width: 100px;
 }
 
 @media (max-width: 768px) {
@@ -85,7 +91,7 @@ defineEmits(['edit'])
     min-width: 0;
   }
 
-  .jornada-lavador-table-header {
+  .jornada-lavador-header {
     display: none;
   }
 }

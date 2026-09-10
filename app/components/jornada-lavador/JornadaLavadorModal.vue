@@ -1,103 +1,88 @@
 <template>
-  <div v-if="showModalInternal" class="jornada-lavador-modal-overlay" @click.self="onCancel">
-    <div class="jornada-lavador-modal">
-      <div class="jornada-lavador-modal-header">
-        <div>
-          <h3 class="jornada-lavador-modal-title">{{ modalTitle }}</h3>
+  <div class="jornada-lavador-modal-overlay" role="presentation">
+    <div
+      class="jornada-lavador-modal"
+      role="dialog"
+      aria-modal="true"
+      :aria-labelledby="`jornada-lavador-modal-title-${mode}`"
+    >
+      <header class="jornada-lavador-modal-header">
+        <div class="jornada-lavador-modal-header-text">
+          <h2 :id="`jornada-lavador-modal-title-${mode}`" class="jornada-lavador-modal-title">
+            {{ mode === 'edit' ? 'Editar Jornada' : 'Nova Jornada' }}
+          </h2>
           <p class="jornada-lavador-modal-subtitle">
-            {{ mode === 'edit' ? 'Atualize as informações da jornada.' : 'Cadastre uma nova jornada e defina o tempo configurado.' }}
+            {{ mode === 'edit' ? 'Atualize a configuração da jornada.' : 'Cadastre uma nova jornada e defina a disponibilidade para agendamento.' }}
           </p>
         </div>
-        <button class="jornada-lavador-modal-close" @click="onCancel" aria-label="Fechar">
-          <XMarkIcon class="jornada-lavador-modal-close-icon" />
+        <button
+          type="button"
+          class="jornada-lavador-modal-close"
+          aria-label="Fechar"
+          @click="$emit('close')"
+        >
+          <XMarkIcon aria-hidden="true" />
         </button>
-      </div>
+      </header>
 
       <div class="jornada-lavador-modal-body">
         <JornadaLavadorForm
-          ref="formRef"
-          :initialData="jornadaEdicao"
+          :initial-data="jornada"
           :mode="mode"
-          @update:formData="formData = $event"
-          @validate="onValidate"
+          @update:form-data="formData = $event"
         />
       </div>
 
-      <div class="jornada-lavador-modal-footer">
-        <button class="jornada-lavador-modal-btn jornada-lavador-modal-btn--secondary" @click="onCancel" :disabled="loading">
+      <footer class="jornada-lavador-modal-footer">
+        <button
+          type="button"
+          class="jornada-lavador-modal-btn jornada-lavador-modal-btn--secondary"
+          @click="$emit('close')"
+        >
           Cancelar
         </button>
-        <button class="jornada-lavador-modal-btn jornada-lavador-modal-btn--primary" @click="onSave" :disabled="loading">
-          <span v-if="!loading">{{ mode === 'edit' ? 'Salvar alterações' : 'Salvar' }}</span>
-          <span v-else class="jornada-lavador-modal-btn-loading">Salvando...</span>
+        <button
+          type="button"
+          class="jornada-lavador-modal-btn jornada-lavador-modal-btn--primary"
+          @click="onSave"
+        >
+          {{ mode === 'edit' ? 'Salvar alterações' : 'Salvar' }}
         </button>
-      </div>
+      </footer>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref } from 'vue'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
 import JornadaLavadorForm from './JornadaLavadorForm.vue'
-import type { JornadaLavador } from '@/utils/jornadaLavadorMock'
+import type { JornadaLavadorMock, JornadaLavadorFormData } from '@/utils/jornadaLavadorMock'
 
 interface Props {
-  visible: boolean
   mode?: 'create' | 'edit'
-  jornadaEdicao?: JornadaLavador | null
+  jornada?: JornadaLavadorMock | null
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  visible: false,
+withDefaults(defineProps<Props>(), {
   mode: 'create',
-  jornadaEdicao: null
+  jornada: null
 })
 
-const emit = defineEmits(['update:visible', 'save', 'cancel'])
+const emit = defineEmits<{
+  close: []
+  save: [data: JornadaLavadorFormData]
+}>()
 
-const formRef = ref<InstanceType<typeof JornadaLavadorForm>>()
-const formData = ref<JornadaLavador | null>(null)
-const loading = ref(false)
-const submitted = ref(false)
-const showModalInternal = ref(props.visible)
-
-const modalTitle = computed(() => props.mode === 'edit' ? 'Editar Jornada' : 'Nova Jornada')
-
-watch(() => props.visible, (newVal) => {
-  showModalInternal.value = newVal
+const formData = ref<JornadaLavadorFormData>({
+  regime: 'NORMAL',
+  horas: 8,
+  disponivel_agendamento: true
 })
-
-const onCancel = () => {
-  showModalInternal.value = false
-  emit('update:visible', false)
-  emit('cancel')
-}
-
-const onValidate = (isValid: boolean) => {
-  submitted.value = !isValid
-}
 
 const onSave = () => {
-  if (formRef.value && formData.value) {
-    formRef.value.validate()
-    if (!submitted.value) {
-      loading.value = true
-      emit('save', { ...formData.value })
-      setTimeout(() => {
-        loading.value = false
-        showModalInternal.value = false
-        emit('update:visible', false)
-      }, 600)
-    }
-  }
+  emit('save', { ...formData.value })
 }
-
-watch(() => props.visible, (newVal) => {
-  if (!newVal) {
-    submitted.value = false
-  }
-})
 </script>
 
 <style scoped>
@@ -117,7 +102,7 @@ watch(() => props.visible, (newVal) => {
   border-radius: 14px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
   width: 100%;
-  max-width: 550px;
+  max-width: 560px;
   max-height: calc(100vh - 32px);
   display: flex;
   flex-direction: column;
@@ -133,15 +118,22 @@ watch(() => props.visible, (newVal) => {
   border-bottom: 1px solid #e5e7eb;
 }
 
+.jornada-lavador-modal-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
 .jornada-lavador-modal-title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   color: #111827;
   margin: 0;
 }
 
 .jornada-lavador-modal-subtitle {
-  font-size: 13px;
+  font-size: 14px;
   color: #6b7280;
   margin: 0;
 }
@@ -171,7 +163,7 @@ watch(() => props.visible, (newVal) => {
   outline-offset: -2px;
 }
 
-.jornada-lavador-modal-close-icon {
+.jornada-lavador-modal-close svg {
   width: 20px;
   height: 20px;
 }
@@ -203,7 +195,7 @@ watch(() => props.visible, (newVal) => {
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.1s;
 }
 
 .jornada-lavador-modal-btn--primary {
@@ -212,14 +204,14 @@ watch(() => props.visible, (newVal) => {
   border: 1px solid #004790;
 }
 
-.jornada-lavador-modal-btn--primary:hover:not(:disabled) {
+.jornada-lavador-modal-btn--primary:hover {
   background-color: #003570;
   border-color: #003570;
 }
 
-.jornada-lavador-modal-btn--primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.jornada-lavador-modal-btn--primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 71, 144, 0.35);
 }
 
 .jornada-lavador-modal-btn--secondary {
@@ -228,16 +220,21 @@ watch(() => props.visible, (newVal) => {
   border: 1px solid #d1d5db;
 }
 
-.jornada-lavador-modal-btn--secondary:hover:not(:disabled) {
+.jornada-lavador-modal-btn--secondary:hover {
   background: #f3f4f6;
 }
 
-.jornada-lavador-modal-btn--secondary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.jornada-lavador-modal-btn--secondary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 71, 144, 0.25);
 }
 
 @media (max-width: 600px) {
+  .jornada-lavador-modal-overlay {
+    padding: 8px;
+    align-items: flex-end;
+  }
+
   .jornada-lavador-modal {
     max-width: 100%;
     max-height: 92vh;

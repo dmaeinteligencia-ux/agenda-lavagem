@@ -1,47 +1,43 @@
-export interface JornadaLavador {
+export type RegimeJornada = 'NORMAL' | 'PLANTAO'
+
+export interface JornadaLavadorMock {
   id: string
-  regime: 'NORMAL' | 'PLANTAO'
-  horas_disponiveis: number
-  created_at: string
-  updated_at: string
+  regime: RegimeJornada
+  dias: string
+  horas: number
+  disponivel_agendamento: boolean
 }
 
-export interface JornadaLavadorSummary {
-  totalRegimes: number
-  normalHours: number
-  plantaoHours: number
-  averageCapacity: number
+export interface JornadaLavadorFormData {
+  regime: RegimeJornada
+  horas: number
+  disponivel_agendamento: boolean
 }
 
-export const jornadasLavadorMock: JornadaLavador[] = [
+export const diasPorRegime = (regime: RegimeJornada): string =>
+  regime === 'NORMAL'
+    ? 'Segunda a sexta-feira'
+    : 'Sábados, domingos e feriados'
+
+export const jornadasLavadorMock: JornadaLavadorMock[] = [
   {
     id: '1',
     regime: 'NORMAL',
-    horas_disponiveis: 8,
-    created_at: '2025-01-15T10:00:00.000Z',
-    updated_at: '2025-01-15T10:00:00.000Z'
+    dias: 'Segunda a sexta-feira',
+    horas: 8,
+    disponivel_agendamento: true
   },
   {
     id: '2',
     regime: 'PLANTAO',
-    horas_disponiveis: 6,
-    created_at: '2025-01-16T14:30:00.000Z',
-    updated_at: '2025-01-16T14:30:00.000Z'
+    dias: 'Sábados, domingos e feriados',
+    horas: 8,
+    disponivel_agendamento: true
   }
 ]
 
-export const jornadaLavadorSummary: JornadaLavadorSummary = {
-  totalRegimes: 2,
-  normalHours: 8,
-  plantaoHours: 6,
-  averageCapacity: 7
-}
-
-export function getJornadaSummary(): JornadaLavadorSummary {
-  return {
-    totalRegimes: 2,
-    normalHours: 8,
-    plantaoHours: 6,
-    averageCapacity: 7
-  }
+export const jornadaLavadorSummary = {
+  regimesConfigurados: '2',
+  jornadaNormal: '8h',
+  plantaoDisponivel: true
 }
