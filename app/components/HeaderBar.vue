@@ -13,17 +13,78 @@
     </div>
     <div class="header-right">
       <div class="user-info">
-        <span class="user-name">Nome do Usuário</span>
-        <span class="user-role">ADMIN</span>
+        <template v-if="carregando">
+          <span class="user-name user-name--muted">Carregando...</span>
+        </template>
+        <template v-else-if="user">
+          <span class="user-name">{{ nomeExibido }}</span>
+          <span class="user-role">{{ perfilLabel }}</span>
+        </template>
       </div>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted, watch } from 'vue'
 import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
 
 const { isOpen, toggle } = useSidebar()
+const { fetchMyProfile } = useAuth()
+const user = useSupabaseUser()
+
+const nome = ref<string | null>(null)
+const perfil = ref<string | null>(null)
+const carregando = ref(false)
+
+const perfilLabel = computed(() => {
+  switch (perfil.value) {
+    case 'ADMIN':
+      return 'Administrador'
+    case 'GESTAO_FROTA':
+      return 'Gestão de Frota'
+    case 'LAVADOR':
+      return 'Lavador'
+    default:
+      return ''
+  }
+})
+
+const nomeExibido = computed(() => {
+  if (nome.value) {
+    return nome.value
+  }
+  if (user.value?.email) {
+    return user.value.email
+  }
+  return 'Usuário'
+})
+
+const carregarPerfil = async () => {
+  if (!user.value) {
+    carregando.value = false
+    nome.value = null
+    perfil.value = null
+    return
+  }
+
+  carregando.value = true
+
+  const { profile } = await fetchMyProfile()
+
+  carregando.value = false
+
+  if (profile) {
+    nome.value = profile.nome
+    perfil.value = profile.perfil
+  } else {
+    nome.value = null
+    perfil.value = null
+  }
+}
+
+onMounted(carregarPerfil)
+watch(user, carregarPerfil)
 </script>
 
 <style scoped>
@@ -91,6 +152,10 @@ const { isOpen, toggle } = useSidebar()
 .user-name {
   font-size: 14px;
   font-weight: 500;
+}
+
+.user-name--muted {
+  opacity: 0.8;
 }
 
 .user-role {

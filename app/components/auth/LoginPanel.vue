@@ -2,24 +2,72 @@
   <section class="login-panel">
     <LoginInstitutionalLogos />
     <div class="login-panel-inner">
-      <LoginHeading />
-      <LoginForm @submit="onSubmit">
-        <LoginEmailField v-model="email" :disabled="isLoading" />
-        <LoginPasswordField v-model="password" :disabled="isLoading" />
-        <LoginSubmitButton :loading="isLoading" :disabled="isLoading" />
-      </LoginForm>
-      <div v-if="errorMessage" class="login-error" role="alert">
-        <ExclamationCircleIcon class="error-icon" aria-hidden="true" />
-        <span>{{ errorMessage }}</span>
+      <div v-if="!notice" class="auth-tabs" role="tablist" aria-label="Opções de acesso">
+        <button
+          type="button"
+          role="tab"
+          :aria-selected="activeTab === 'login'"
+          class="auth-tab"
+          :class="{ 'auth-tab--active': activeTab === 'login' }"
+          @click="selectTab('login')"
+        >
+          Entrar
+        </button>
+        <button
+          type="button"
+          role="tab"
+          :aria-selected="activeTab === 'signup'"
+          class="auth-tab"
+          :class="{ 'auth-tab--active': activeTab === 'signup' }"
+          @click="selectTab('signup')"
+        >
+          Solicitar cadastro
+        </button>
       </div>
-      <LoginAccessNotice />
+
+      <AuthNotice
+        v-if="notice"
+        :variant="notice"
+        :needs-email-confirmation="needsEmailConfirmation"
+        @action="handleNoticeAction"
+      />
+
+      <template v-else-if="activeTab === 'login'">
+        <LoginHeading />
+        <LoginForm @submit="onSubmitLogin">
+          <LoginEmailField v-model="email" :disabled="isLoading" />
+          <LoginPasswordField v-model="password" :disabled="isLoading" />
+          <LoginSubmitButton :loading="isLoading" :disabled="isLoading" />
+        </LoginForm>
+        <div v-if="errorMessage" class="login-error" role="alert">
+          <ExclamationCircleIcon class="error-icon" aria-hidden="true" />
+          <span>{{ errorMessage }}</span>
+        </div>
+        <LoginAccessNotice />
+      </template>
+
+      <template v-else>
+        <header class="signup-heading">
+          <h2 class="signup-heading-title">Solicite seu cadastro</h2>
+          <p class="signup-heading-subtitle">
+            Preencha seus dados para solicitar acesso ao sistema.
+          </p>
+        </header>
+        <SignupForm
+          :loading="isLoading"
+          :disabled="isLoading"
+          :api-error="signupError"
+          @submit="onSubmitSignup"
+        />
+      </template>
+
       <LoginFooter />
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { ExclamationCircleIcon } from '@heroicons/vue/24/outline'
 import LoginInstitutionalLogos from './LoginInstitutionalLogos.vue'
 import LoginHeading from './LoginHeading.vue'
@@ -29,16 +77,31 @@ import LoginPasswordField from './LoginPasswordField.vue'
 import LoginSubmitButton from './LoginSubmitButton.vue'
 import LoginAccessNotice from './LoginAccessNotice.vue'
 import LoginFooter from './LoginFooter.vue'
+import SignupForm from './SignupForm.vue'
+import AuthNotice from './AuthNotice.vue'
 
-const { signIn, isLoading, error } = useAuth()
+type NoticeVariant = 'PENDENTE' | 'BLOQUEADO' | 'SEM_PERFIL' | 'SIGNUP_SUCCESS'
+
+const { signIn, signUp, signOut, isLoading } = useAuth()
+
+const activeTab = ref<'login' | 'signup'>('login')
+const notice = ref<NoticeVariant | null>(null)
+const needsEmailConfirmation = ref(false)
 
 const email = ref('')
 const password = ref('')
 const localError = ref<string | null>(null)
+const signupError = ref<string | null>(null)
 
-const errorMessage = computed(() => localError.value || error.value)
+const errorMessage = computed(() => localError.value)
 
-const onSubmit = async () => {
+const selectTab = (tab: 'login' | 'signup') => {
+  activeTab.value = tab
+  localError.value = null
+  signupError.value = null
+}
+
+const onSubmitLogin = async () => {
   localError.value = null
 
   if (!email.value || !password.value) {
@@ -48,9 +111,41 @@ const onSubmit = async () => {
 
   const result = await signIn({ email: email.value, password: password.value })
 
-  if (!result.success) {
-    localError.value = result.error?.message || 'Não foi possível entrar no sistema.'
+  if (result.success) {
+    return
   }
+
+  if (result.status === 'PENDENTE' || result.status === 'BLOQUEADO' || result.status === 'SEM_PERFIL') {
+    notice.value = result.status
+    return
+  }
+
+  localError.value = result.message || 'Não foi possível entrar no sistema.'
+}
+
+const onSubmitSignup = async (data: { nome: string; email: string; password: string }) => {
+  signupError.value = null
+
+  const result = await signUp(data)
+
+  if (result.success) {
+    needsEmailConfirmation.value = result.needsEmailConfirmation
+    notice.value = 'SIGNUP_SUCCESS'
+    return
+  }
+
+  signupError.value = result.message || 'Não foi possível concluir o cadastro.'
+}
+
+const handleNoticeAction = async () => {
+  await signOut()
+  notice.value = null
+  needsEmailConfirmation.value = false
+  activeTab.value = 'login'
+  email.value = ''
+  password.value = ''
+  localError.value = null
+  signupError.value = null
 }
 </script>
 
@@ -79,6 +174,43 @@ const onSubmit = async () => {
   border: 1px solid #e5e7eb;
 }
 
+.auth-tabs {
+  display: flex;
+  gap: 4px;
+  background: #f0f4f8;
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4b5563;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.auth-tab:hover {
+  color: #004790;
+}
+
+.auth-tab--active {
+  background: #fff;
+  color: #004790;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.auth-tab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 71, 144, 0.25);
+}
+
 .login-error {
   display: flex;
   align-items: center;
@@ -95,6 +227,25 @@ const onSubmit = async () => {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+}
+
+.signup-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.signup-heading-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.signup-heading-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
 }
 
 @media (max-width: 1024px) {
@@ -115,6 +266,10 @@ const onSubmit = async () => {
     padding: 24px 20px;
     gap: 20px;
     border-radius: 12px;
+  }
+
+  .signup-heading-title {
+    font-size: 20px;
   }
 }
 </style>
