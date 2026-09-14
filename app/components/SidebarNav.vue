@@ -48,7 +48,9 @@ import {
   DocumentTextIcon,
   TruckIcon,
   ChartBarIcon,
-  Cog6ToothIcon
+  Cog6ToothIcon,
+  UserGroupIcon,
+  CalendarIcon
 } from '@heroicons/vue/24/outline'
 
 const { isOpen, close } = useSidebar()
@@ -60,6 +62,8 @@ const navItems = [
   { label: 'Veículos', icon: TruckIcon, route: '/veiculos' },
   { label: 'Tipos de Veículo', icon: TruckIcon, route: '/tipos-veiculo' },
   { label: 'Jornada do Lavador', icon: CalendarDaysIcon, route: '/jornada-lavador' },
+  { label: 'Calendário Operacional', icon: CalendarIcon, route: '/calendario-operacional' },
+  { label: 'Solicitantes', icon: UserGroupIcon, route: '/solicitantes' },
   { label: 'Relatórios', icon: ChartBarIcon, route: '/relatorios' },
   { label: 'Configurações', icon: Cog6ToothIcon, route: '/configuracoes' }
 ]
