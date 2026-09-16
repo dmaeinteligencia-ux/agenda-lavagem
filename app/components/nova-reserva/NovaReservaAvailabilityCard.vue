@@ -50,7 +50,14 @@
         <strong class="nova-reserva-availability-vehicle-time-value">{{ estimatedTime }}</strong>
       </div>
 
-      <NovaReservaAvailabilityStatus :status="availability" />
+      <div v-if="dataInativa" class="nova-reserva-availability-inativo" role="alert">
+        <p class="nova-reserva-availability-inativo-title">Sem atendimento nesta data</p>
+        <p class="nova-reserva-availability-inativo-text">
+          O lavador não terá atendimento na data selecionada. Escolha outra data.
+        </p>
+      </div>
+
+      <NovaReservaAvailabilityStatus :status="availability" :data-inativa="dataInativa" />
     </div>
   </section>
 </template>
@@ -65,6 +72,7 @@ interface Props {
   utilizationPercent: number
   estimatedTime: string
   availability: 'Disponível' | 'Indisponível'
+  dataInativa: boolean
 }
 
 defineProps<Props>()
@@ -229,6 +237,29 @@ defineProps<Props>()
   font-weight: 700;
   color: #004790;
   white-space: nowrap;
+}
+
+.nova-reserva-availability-inativo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+}
+
+.nova-reserva-availability-inativo-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #991b1b;
+}
+
+.nova-reserva-availability-inativo-text {
+  margin: 0;
+  font-size: 13px;
+  color: #7f1d1d;
 }
 
 @media (max-width: 600px) {

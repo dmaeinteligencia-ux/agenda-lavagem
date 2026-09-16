@@ -38,6 +38,15 @@ interface DisponibilidadeRow {
   disponivel: boolean
 }
 
+interface DiaOperacionalRow {
+  regime: string
+  ativo: boolean
+  eh_feriado: boolean
+  nome_feriado: string | null
+  abrangencia_feriado: string | null
+  tem_configuracao_manual: boolean
+}
+
 export const useReservas = () => {
   const supabase = useSupabaseClient()
 
@@ -45,6 +54,7 @@ export const useReservas = () => {
   const reservas = ref<ReservaComRelacionamentos[]>([])
   const horarios = ref<Map<string, HorariosReserva>>(new Map())
   const capacidade = ref<CapacidadeDia | null>(null)
+  const diaOperacional = ref<DiaOperacionalRow | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -141,6 +151,7 @@ export const useReservas = () => {
       })
 
       await carregarEventos(lista.map((r) => r.id))
+      await carregarDiaOperacional()
       await carregarCapacidade(veiculoIds)
     } catch (err) {
       error.value = 'Não foi possível carregar a agenda.'
@@ -181,6 +192,23 @@ export const useReservas = () => {
     }
 
     horarios.value = novoMapa
+  }
+
+  const carregarDiaOperacional = async () => {
+    diaOperacional.value = null
+
+    const { data, error: diaError } = await supabase.rpc('resolver_dia_operacional', {
+      p_data: selectedDate.value
+    })
+
+    if (diaError) {
+      return
+    }
+
+    const linhas = data as DiaOperacionalRow[]
+    if (linhas && linhas.length > 0) {
+      diaOperacional.value = linhas[0]
+    }
   }
 
   const carregarCapacidade = async (veiculoIds: string[]) => {
@@ -297,6 +325,7 @@ export const useReservas = () => {
     reservas,
     horarios,
     capacidade,
+    diaOperacional,
     loading,
     error,
     fetchReservas,

@@ -6,6 +6,7 @@
         <span class="nova-reserva-vehicle-info-label">Identificação</span>
         <strong class="nova-reserva-vehicle-info-code">{{ vehicle.identification }}</strong>
       </div>
+      <VeiculoStatusBadge v-if="typeof vehicle.ativo === 'boolean'" :ativo="vehicle.ativo" />
     </div>
     <dl class="nova-reserva-vehicle-info-details">
       <div class="nova-reserva-vehicle-info-item">
@@ -21,11 +22,16 @@
         <dd>{{ vehicle.model }}</dd>
       </div>
     </dl>
+    <p v-if="vehicle.ativo === false" class="nova-reserva-vehicle-info-inactive">
+      Este veículo está inativo e não pode receber novas reservas. Solicite a ativação do
+      veículo no cadastro para continuar.
+    </p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { TruckIcon } from '@heroicons/vue/24/outline'
+import VeiculoStatusBadge from '@/components/veiculos/VeiculoStatusBadge.vue'
 import type { NovaReservaVehicle } from '@/utils/reservas'
 
 interface Props {
@@ -104,6 +110,17 @@ defineProps<Props>()
   font-size: 14px;
   font-weight: 600;
   color: #1f2937;
+}
+
+.nova-reserva-vehicle-info-inactive {
+  flex-basis: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  font-size: 13px;
 }
 
 @media (max-width: 600px) {

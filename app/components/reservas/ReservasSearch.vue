@@ -7,7 +7,9 @@
         id="reservas-search"
         class="reservas-search-input"
         type="text"
-        placeholder="Pesquisar por placa..."
+        :value="modelValue"
+        placeholder="Pesquisar por placa, veículo, modelo ou solicitante..."
+        @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       />
     </div>
   </div>
@@ -15,6 +17,16 @@
 
 <script setup lang="ts">
 import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
+
+interface Props {
+  modelValue: string
+}
+
+defineProps<Props>()
+
+defineEmits<{
+  'update:modelValue': [value: string]
+}>()
 </script>
 
 <style scoped>

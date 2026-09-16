@@ -1,26 +1,46 @@
 <template>
   <div class="agenda-day-details">
-    <h3 class="agenda-day-details-title">Detalhes do dia</h3>
+    <h3 class="agenda-day-details-title">Resumo operacional</h3>
+
     <div class="agenda-day-details-body">
-      <div class="agenda-day-details-row">
+      <div class="agenda-day-details-item">
+        <span class="agenda-day-details-label">Data</span>
+        <span class="agenda-day-details-value">{{ dataFormatada }}</span>
+      </div>
+
+      <div class="agenda-day-details-item">
         <span class="agenda-day-details-label">Regime</span>
         <span class="agenda-day-details-value agenda-day-details-badge">{{ regimeExibido }}</span>
       </div>
-      <div class="agenda-day-details-row">
-        <span class="agenda-day-details-label">Capacidade</span>
-        <span class="agenda-day-details-value">{{ capacidade }} min</span>
+
+      <div class="agenda-day-details-item">
+        <span class="agenda-day-details-label">Atendimento</span>
+        <span
+          class="agenda-day-details-value"
+          :class="{ 'agenda-day-details-value--inativo': diaAtivo === false }"
+        >
+          {{ atendimentoLabel }}
+        </span>
       </div>
-      <div class="agenda-day-details-row">
-        <span class="agenda-day-details-label">Utilizado</span>
-        <span class="agenda-day-details-value">{{ utilizado }} min</span>
+
+      <div class="agenda-day-details-item">
+        <span class="agenda-day-details-label">Progresso</span>
+        <span class="agenda-day-details-value">{{ progresso }}</span>
       </div>
-      <div class="agenda-day-details-row">
-        <span class="agenda-day-details-label">Disponível</span>
-        <span class="agenda-day-details-value agenda-day-details-value--accent">{{ disponivel }} min</span>
+
+      <div class="agenda-day-details-item">
+        <span class="agenda-day-details-label">Situação atual</span>
+        <span class="agenda-day-details-value">{{ situacaoAtual }}</span>
       </div>
-      <div class="agenda-day-details-row">
-        <span class="agenda-day-details-label">Reservas</span>
-        <span class="agenda-day-details-value">{{ reservas }}</span>
+
+      <div class="agenda-day-details-item">
+        <span class="agenda-day-details-label">Pendências</span>
+        <span
+          class="agenda-day-details-value"
+          :class="{ 'agenda-day-details-value--alerta': temPendencias }"
+        >
+          {{ pendencias }}
+        </span>
       </div>
     </div>
   </div>
@@ -28,13 +48,16 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { formatarDataExtensa } from '@/utils/reservas'
 
 interface Props {
+  data: string
   regime: string | null
-  capacidade: number
-  utilizado: number
-  disponivel: number
-  reservas: number
+  diaAtivo: boolean | null
+  progresso: string
+  situacaoAtual: string
+  pendencias: string
+  temPendencias: boolean
 }
 
 const props = defineProps<Props>()
@@ -44,6 +67,23 @@ const regimeExibido = computed(() => {
     return '—'
   }
   return props.regime === 'PLANTAO' ? 'PLANTÃO' : props.regime
+})
+
+const atendimentoLabel = computed(() => {
+  if (props.diaAtivo === false) {
+    return 'Sem atendimento'
+  }
+  if (props.diaAtivo === true) {
+    return 'Ativo'
+  }
+  return '—'
+})
+
+const dataFormatada = computed(() => {
+  if (!props.data) {
+    return '—'
+  }
+  return formatarDataExtensa(props.data)
 })
 </script>
 
@@ -69,32 +109,54 @@ const regimeExibido = computed(() => {
 .agenda-day-details-body {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
-.agenda-day-details-row {
+.agenda-day-details-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.agenda-day-details-item:not(:first-child) {
+  padding-top: 12px;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.agenda-day-details-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.agenda-day-details-value {
   font-size: 13px;
-  padding: 6px 0;
-  border-bottom: 1px dashed #e5e7eb;
+  font-weight: 600;
+  color: #111827;
 }
 
-.agenda-day-details-row:last-child {
-  border-bottom: none;
+.agenda-day-details-value--alerta {
+  color: #b45309;
 }
 
-.agenda-day-details-label { color: #6b7280; }
-.agenda-day-details-value { font-weight: 600; color: #111827; }
-.agenda-day-details-value--accent { color: #004790; font-weight: 700; }
+.agenda-day-details-value--inativo {
+  align-self: flex-start;
+  display: inline-flex;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 12px;
+  font-weight: 700;
+}
 
 .agenda-day-details-badge {
+  align-self: flex-start;
   background: #dbeafe;
   color: #004790;
   padding: 2px 10px;
   border-radius: 999px;
   font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }

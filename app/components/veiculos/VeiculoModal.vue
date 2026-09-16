@@ -9,11 +9,9 @@
       <header class="veiculo-modal-header">
         <div class="veiculo-modal-header-text">
           <h2 :id="`veiculo-modal-title-${mode}`" class="veiculo-modal-title">
-            {{ mode === 'edit' ? 'Editar Veículo' : 'Novo Veículo' }}
+            {{ titulo }}
           </h2>
-          <p class="veiculo-modal-subtitle">
-            {{ mode === 'edit' ? 'Atualize as informações do veículo da frota.' : 'Cadastre as informações do veículo da frota.' }}
-          </p>
+          <p class="veiculo-modal-subtitle">{{ subtitulo }}</p>
         </div>
         <button
           type="button"
@@ -26,32 +24,103 @@
       </header>
 
       <div class="veiculo-modal-body">
-        <VeiculoForm />
+        <VeiculoForm :form="form" :tipos="tipos" :readonly="readonly" />
+
+        <p v-if="error" class="veiculo-modal-error" role="alert">{{ error }}</p>
       </div>
 
       <footer class="veiculo-modal-footer">
-        <button type="button" class="veiculo-modal-btn veiculo-modal-btn--secondary">
-          Cancelar
+        <button
+          v-if="readonly"
+          type="button"
+          class="veiculo-modal-btn veiculo-modal-btn--secondary"
+          @click="$emit('close')"
+        >
+          Fechar
         </button>
-        <button type="button" class="veiculo-modal-btn veiculo-modal-btn--primary">
-          {{ mode === 'edit' ? 'Salvar alterações' : 'Salvar' }}
-        </button>
+
+        <template v-else>
+          <button
+            type="button"
+            class="veiculo-modal-btn veiculo-modal-btn--secondary"
+            :disabled="saving"
+            @click="$emit('close')"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="veiculo-modal-btn veiculo-modal-btn--primary"
+            :disabled="saving"
+            @click="submit"
+          >
+            <span v-if="saving" class="veiculo-modal-spinner" aria-hidden="true" />
+            <span>{{ saving ? 'Salvando...' : confirmLabel }}</span>
+          </button>
+        </template>
       </footer>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { reactive, computed } from 'vue'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
 import VeiculoForm from './VeiculoForm.vue'
+import {
+  formDataInicial,
+  veiculoToFormData,
+  type TipoVeiculo,
+  type Veiculo,
+  type VeiculoFormData
+} from '@/utils/veiculos'
 
 interface Props {
-  mode?: 'create' | 'edit'
+  mode?: 'create' | 'edit' | 'view'
+  veiculo?: Veiculo | null
+  tipos: TipoVeiculo[]
+  saving?: boolean
+  error?: string | null
 }
 
-withDefaults(defineProps<Props>(), {
-  mode: 'create'
+const props = withDefaults(defineProps<Props>(), {
+  mode: 'create',
+  veiculo: null,
+  saving: false,
+  error: null
 })
+
+const emit = defineEmits<{
+  close: []
+  submit: [data: VeiculoFormData]
+}>()
+
+const readonly = computed(() => props.mode === 'view')
+
+const titulo = computed(() => {
+  if (props.mode === 'edit') return 'Editar Veículo'
+  if (props.mode === 'view') return 'Detalhes do Veículo'
+  return 'Novo Veículo'
+})
+
+const subtitulo = computed(() => {
+  if (props.mode === 'edit') return 'Atualize as informações do veículo da frota.'
+  if (props.mode === 'view') return 'Informações do veículo da frota.'
+  return 'Cadastre as informações do veículo da frota.'
+})
+
+const confirmLabel = computed(() => (props.mode === 'edit' ? 'Salvar alterações' : 'Salvar'))
+
+const form = reactive<VeiculoFormData>(
+  props.veiculo ? veiculoToFormData(props.veiculo) : formDataInicial()
+)
+
+const submit = () => {
+  if (props.saving || readonly.value) {
+    return
+  }
+  emit('submit', { ...form })
+}
 </script>
 
 <style scoped>
@@ -141,6 +210,19 @@ withDefaults(defineProps<Props>(), {
   padding: 24px 28px;
   overflow-y: auto;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.veiculo-modal-error {
+  margin: 0;
+  padding: 10px 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 13px;
 }
 
 .veiculo-modal-footer {
@@ -158,6 +240,7 @@ withDefaults(defineProps<Props>(), {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   padding: 10px 22px;
   font-size: 14px;
   font-weight: 600;
@@ -167,13 +250,18 @@ withDefaults(defineProps<Props>(), {
   transition: background-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.1s;
 }
 
+.veiculo-modal-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .veiculo-modal-btn--primary {
   background-color: #004790;
   color: #fff;
   border: 1px solid #004790;
 }
 
-.veiculo-modal-btn--primary:hover {
+.veiculo-modal-btn--primary:hover:not(:disabled) {
   background-color: #003570;
   border-color: #003570;
 }
@@ -189,13 +277,28 @@ withDefaults(defineProps<Props>(), {
   border: 1px solid #d1d5db;
 }
 
-.veiculo-modal-btn--secondary:hover {
+.veiculo-modal-btn--secondary:hover:not(:disabled) {
   background: #f3f4f6;
 }
 
 .veiculo-modal-btn--secondary:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px rgba(0, 71, 144, 0.25);
+}
+
+.veiculo-modal-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: veiculo-modal-spin 0.6s linear infinite;
+}
+
+@keyframes veiculo-modal-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 600px) {

@@ -1,18 +1,36 @@
 <template>
   <div class="reservas-pagination">
-    <span class="reservas-pagination-info">Exibindo 1–10 de 24 resultados</span>
+    <span class="reservas-pagination-info">{{ info }}</span>
     <div class="reservas-pagination-controls">
-      <button type="button" class="reservas-pagination-btn" disabled>
+      <button
+        type="button"
+        class="reservas-pagination-btn"
+        :disabled="page <= 1"
+        @click="$emit('update:page', page - 1)"
+      >
         <ChevronLeftIcon aria-hidden="true" />
         <span>Anterior</span>
       </button>
       <div class="reservas-pagination-pages">
-        <button type="button" class="reservas-pagination-page reservas-pagination-page--active">1</button>
-        <button type="button" class="reservas-pagination-page">2</button>
-        <button type="button" class="reservas-pagination-page">3</button>
-        <span class="reservas-pagination-ellipsis">…</span>
+        <template v-for="(item, index) in paginas" :key="`${item}-${index}`">
+          <span v-if="item === '...'" class="reservas-pagination-ellipsis">…</span>
+          <button
+            v-else
+            type="button"
+            class="reservas-pagination-page"
+            :class="{ 'reservas-pagination-page--active': item === page }"
+            @click="$emit('update:page', item as number)"
+          >
+            {{ item }}
+          </button>
+        </template>
       </div>
-      <button type="button" class="reservas-pagination-btn">
+      <button
+        type="button"
+        class="reservas-pagination-btn"
+        :disabled="page >= totalPaginas"
+        @click="$emit('update:page', page + 1)"
+      >
         <span>Próxima</span>
         <ChevronRightIcon aria-hidden="true" />
       </button>
@@ -21,7 +39,55 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
+
+interface Props {
+  page: number
+  pageSize: number
+  total: number
+}
+
+const props = defineProps<Props>()
+
+defineEmits<{
+  'update:page': [value: number]
+}>()
+
+const totalPaginas = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
+
+const inicio = computed(() => (props.total === 0 ? 0 : (props.page - 1) * props.pageSize + 1))
+const fim = computed(() => Math.min(props.page * props.pageSize, props.total))
+
+const info = computed(() => `Exibindo ${inicio.value}–${fim.value} de ${props.total} resultados`)
+
+const paginas = computed<(number | '...')[]>(() => {
+  const total = totalPaginas.value
+  const atual = props.page
+
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1)
+  }
+
+  const itens: (number | '...')[] = [1]
+  const comeco = Math.max(2, atual - 1)
+  const fimJanela = Math.min(total - 1, atual + 1)
+
+  if (comeco > 2) {
+    itens.push('...')
+  }
+
+  for (let i = comeco; i <= fimJanela; i += 1) {
+    itens.push(i)
+  }
+
+  if (fimJanela < total - 1) {
+    itens.push('...')
+  }
+
+  itens.push(total)
+  return itens
+})
 </script>
 
 <style scoped>

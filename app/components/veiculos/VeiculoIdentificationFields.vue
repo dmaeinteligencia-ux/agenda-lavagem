@@ -2,26 +2,36 @@
   <div class="veiculo-form-section">
     <h4 class="veiculo-form-section-title">Identificação</h4>
     <div class="veiculo-form-grid">
-      <BaseInput label="Código do equipamento" placeholder="Digite o código do equipamento" />
+      <BaseInput
+        label="Identificação da frota"
+        placeholder="Ex: A: 1"
+        :model-value="form.nome_frota"
+        :disabled="readonly"
+        @update:model-value="form.nome_frota = $event"
+      />
       <div class="veiculo-form-field">
-        <label class="veiculo-form-label">Tipo de veículo</label>
+        <label class="veiculo-form-label" for="veiculo-tipo">Tipo de veículo</label>
         <div class="veiculo-form-select-wrap">
-          <input
-            type="text"
+          <select
+            id="veiculo-tipo"
             class="veiculo-form-input"
-            placeholder="Selecione o tipo"
-            readonly
-          />
+            :value="form.tipo_veiculo_id"
+            :disabled="readonly"
+            @change="form.tipo_veiculo_id = ($event.target as HTMLSelectElement).value"
+          >
+            <option value="" disabled>Selecione o tipo</option>
+            <option v-for="item in tipos" :key="item.id" :value="item.id">
+              {{ item.descricao }} — {{ item.tempo_min }} min
+            </option>
+          </select>
           <ChevronDownIcon class="veiculo-form-select-icon" aria-hidden="true" />
         </div>
       </div>
-      <BaseInput label="Classificação da frota" placeholder="Digite a classificação" />
-      <BaseInput label="Número da frota" placeholder="Digite o número" />
     </div>
 
     <div class="veiculo-form-info">
       <span class="veiculo-form-info-label">Identificação da frota</span>
-      <strong class="veiculo-form-info-value">A11</strong>
+      <strong class="veiculo-form-info-value">{{ form.nome_frota || '—' }}</strong>
     </div>
   </div>
 </template>
@@ -29,6 +39,17 @@
 <script setup lang="ts">
 import BaseInput from '@/components/BaseInput.vue'
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
+import type { TipoVeiculo, VeiculoFormData } from '@/utils/veiculos'
+
+interface Props {
+  form: VeiculoFormData
+  tipos: TipoVeiculo[]
+  readonly?: boolean
+}
+
+withDefaults(defineProps<Props>(), {
+  readonly: false
+})
 </script>
 
 <style scoped>
@@ -88,8 +109,10 @@ import { ChevronDownIcon } from '@heroicons/vue/24/outline'
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.veiculo-form-input::placeholder {
-  color: #9ca3af;
+.veiculo-form-input:disabled {
+  background: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
 }
 
 .veiculo-form-input:focus {

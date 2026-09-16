@@ -1,13 +1,23 @@
 <template>
   <div class="reservas-empty-state">
     <CalendarDaysIcon class="reservas-empty-state-icon" aria-hidden="true" />
-    <h3 class="reservas-empty-state-title">Não há reservas encontradas</h3>
-    <p class="reservas-empty-state-desc">Quando houver reservas cadastradas, elas aparecerão aqui.</p>
+    <h3 class="reservas-empty-state-title">{{ title }}</h3>
+    <p class="reservas-empty-state-desc">{{ description }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { CalendarDaysIcon } from '@heroicons/vue/24/outline'
+
+interface Props {
+  title?: string
+  description?: string
+}
+
+withDefaults(defineProps<Props>(), {
+  title: 'Não há reservas encontradas',
+  description: 'Quando houver reservas cadastradas, elas aparecerão aqui.'
+})
 </script>
 
 <style scoped>

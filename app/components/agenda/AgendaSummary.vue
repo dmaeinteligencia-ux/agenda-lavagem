@@ -2,7 +2,7 @@
   <div class="agenda-summary">
     <AgendaSummaryCard
       title="Capacidade"
-      :value="`${capacidade} min`"
+      :value="capacidadeValor"
       description="Jornada do dia"
       :icon="ClockIcon"
       variant="amber"
@@ -16,8 +16,9 @@
     />
     <AgendaSummaryCard
       title="Disponível"
-      :value="`${disponivel} min`"
-      description="Restantes"
+      :value="disponivelValor"
+      :compact-value="diaInativo"
+      :description="diaInativo ? 'Sem atendimento nesta data' : 'Restantes'"
       :icon="CheckCircleIcon"
       variant="green"
     />
@@ -41,9 +42,17 @@ interface Props {
   utilizado: number
   disponivel: number
   reservas: number
+  diaAtivo: boolean | null
 }
 
 const props = defineProps<Props>()
+
+const diaInativo = computed(() => props.diaAtivo === false)
+
+const capacidadeValor = computed(() => (diaInativo.value ? '—' : `${props.capacidade} min`))
+const disponivelValor = computed(() =>
+  diaInativo.value ? 'Sem atendimento' : `${props.disponivel} min`
+)
 
 const percentualDescricao = computed(() => {
   if (props.capacidade <= 0) {

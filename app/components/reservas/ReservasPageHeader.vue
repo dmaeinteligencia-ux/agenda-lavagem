@@ -4,10 +4,10 @@
       <h1 class="reservas-page-header-title">Reservas</h1>
       <p class="reservas-page-header-subtitle">Consulte e acompanhe as reservas de lavagem da frota.</p>
     </div>
-    <button type="button" class="reservas-new-reservation-btn" aria-label="Nova Reserva">
+    <NuxtLink to="/nova-reserva" class="reservas-new-reservation-btn" aria-label="Nova Reserva">
       <PlusIcon class="reservas-new-reservation-btn-icon" aria-hidden="true" />
       Nova Reserva
-    </button>
+    </NuxtLink>
   </header>
 </template>
 
@@ -57,6 +57,7 @@ import { PlusIcon } from '@heroicons/vue/24/outline'
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
+  text-decoration: none;
   transition: background-color 0.2s, box-shadow 0.2s, transform 0.1s;
 }
 

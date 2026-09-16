@@ -3,31 +3,52 @@
     <td class="veiculo-cell veiculo-cell--id" data-label="Identificação">
       <div class="veiculo-id-block">
         <TruckIcon class="veiculo-cell-icon" aria-hidden="true" />
-        <strong class="veiculo-id">{{ veiculo.identification }}</strong>
+        <strong class="veiculo-id">{{ identificacao }}</strong>
       </div>
     </td>
     <td class="veiculo-cell" data-label="Placa">
-      <span class="veiculo-plate">{{ veiculo.plate }}</span>
+      <span class="veiculo-plate">{{ veiculo.nr_placa_transport }}</span>
     </td>
     <td class="veiculo-cell" data-label="Tipo">
-      <span>{{ veiculo.type }}</span>
+      <span>{{ veiculo.tipo?.descricao ?? '—' }}</span>
     </td>
-    <td class="veiculo-cell" data-label="Equipamento">
-      <span class="veiculo-equipment">{{ veiculo.equipment }}</span>
+    <td class="veiculo-cell" data-label="Modelo">
+      <span>{{ veiculo.ds_modelo || '—' }}</span>
     </td>
     <td class="veiculo-cell" data-label="Situação">
-      <VeiculoStatusBadge :situacao="veiculo.situacao" />
+      <VeiculoStatusBadge :ativo="veiculo.ativo" />
     </td>
     <td class="veiculo-cell veiculo-cell--actions" data-label="Ações">
       <div class="veiculo-actions">
-        <button type="button" class="veiculo-action-btn" title="Visualizar" aria-label="Visualizar veículo">
+        <button
+          type="button"
+          class="veiculo-action-btn"
+          title="Visualizar"
+          aria-label="Visualizar veículo"
+          @click="$emit('visualizar', veiculo)"
+        >
           <EyeIcon aria-hidden="true" />
         </button>
-        <button type="button" class="veiculo-action-btn" title="Editar" aria-label="Editar veículo">
+        <button
+          type="button"
+          class="veiculo-action-btn"
+          title="Editar"
+          aria-label="Editar veículo"
+          @click="$emit('editar', veiculo)"
+        >
           <PencilSquareIcon aria-hidden="true" />
         </button>
-        <button type="button" class="veiculo-action-btn" title="Mais ações" aria-label="Mais ações">
-          <EllipsisVerticalIcon aria-hidden="true" />
+        <button
+          type="button"
+          class="veiculo-action-btn"
+          :class="veiculo.ativo ? 'veiculo-action-btn--danger' : 'veiculo-action-btn--success'"
+          :title="veiculo.ativo ? 'Inativar' : 'Ativar'"
+          :aria-label="veiculo.ativo ? 'Inativar veículo' : 'Ativar veículo'"
+          :disabled="saving"
+          @click="$emit('alterar-ativo', veiculo)"
+        >
+          <span v-if="saving" class="veiculo-action-spinner" aria-hidden="true" />
+          <PowerIcon v-else aria-hidden="true" />
         </button>
       </div>
     </td>
@@ -35,15 +56,25 @@
 </template>
 
 <script setup lang="ts">
-import { TruckIcon, EyeIcon, PencilSquareIcon, EllipsisVerticalIcon } from '@heroicons/vue/24/outline'
+import { computed } from 'vue'
+import { TruckIcon, EyeIcon, PencilSquareIcon, PowerIcon } from '@heroicons/vue/24/outline'
 import VeiculoStatusBadge from './VeiculoStatusBadge.vue'
-import type { VeiculoMock } from '@/utils/veiculosMock'
+import { identificacaoVeiculo, type Veiculo } from '@/utils/veiculos'
 
 interface Props {
-  veiculo: VeiculoMock
+  veiculo: Veiculo
+  saving: boolean
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
+
+defineEmits<{
+  visualizar: [veiculo: Veiculo]
+  editar: [veiculo: Veiculo]
+  'alterar-ativo': [veiculo: Veiculo]
+}>()
+
+const identificacao = computed(() => identificacaoVeiculo(props.veiculo))
 </script>
 
 <style scoped>
@@ -93,17 +124,6 @@ defineProps<Props>()
   letter-spacing: 0.02em;
 }
 
-.veiculo-equipment {
-  display: inline-flex;
-  padding: 3px 10px;
-  background: #f3f4f6;
-  color: #4b5563;
-  border-radius: 6px;
-  font-family: 'Courier New', monospace;
-  font-size: 12px;
-  font-weight: 600;
-}
-
 .veiculo-cell--actions {
   text-align: right;
 }
@@ -129,9 +149,24 @@ defineProps<Props>()
   transition: background-color 0.15s, color 0.15s;
 }
 
-.veiculo-action-btn:hover {
+.veiculo-action-btn:hover:not(:disabled) {
   background: #f3f4f6;
   color: #004790;
+}
+
+.veiculo-action-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.veiculo-action-btn--danger:hover:not(:disabled) {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.veiculo-action-btn--success:hover:not(:disabled) {
+  background: #d1fae5;
+  color: #047857;
 }
 
 .veiculo-action-btn:focus-visible {
@@ -142,6 +177,21 @@ defineProps<Props>()
 .veiculo-action-btn svg {
   width: 18px;
   height: 18px;
+}
+
+.veiculo-action-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #dbeafe;
+  border-top-color: #004790;
+  border-radius: 50%;
+  animation: veiculo-action-spin 0.7s linear infinite;
+}
+
+@keyframes veiculo-action-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 768px) {

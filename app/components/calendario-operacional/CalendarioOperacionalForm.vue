@@ -13,17 +13,46 @@
     </div>
 
     <div class="calendario-operacional-form-field">
+      <label for="calendario-operacional-tipo" class="calendario-operacional-form-label">Tipo da configuração</label>
+      <select
+        id="calendario-operacional-tipo"
+        v-model="formData.tipo_configuracao"
+        class="calendario-operacional-form-select"
+      >
+        <option v-for="opcao in tipoOpcoes" :key="opcao.value" :value="opcao.value">
+          {{ opcao.label }}
+        </option>
+      </select>
+    </div>
+
+    <div class="calendario-operacional-form-field">
       <label for="calendario-operacional-regime" class="calendario-operacional-form-label">Regime</label>
       <select
         id="calendario-operacional-regime"
         v-model="formData.regime"
         class="calendario-operacional-form-select"
       >
-        <option value="NORMAL">NORMAL</option>
-        <option value="PLANTAO">PLANTÃO</option>
+        <option v-for="opcao in regimeOpcoes" :key="opcao.value" :value="opcao.value">
+          {{ opcao.label }}
+        </option>
       </select>
       <p class="calendario-operacional-form-helper">
-        Segunda a sexta-feira: NORMAL. Sábados, domingos e feriados: PLANTÃO.
+        Padrão do sistema: segunda a sexta NORMAL; sábados, domingos e feriados oficiais PLANTÃO.
+      </p>
+    </div>
+
+    <div class="calendario-operacional-form-field">
+      <label for="calendario-operacional-atendimento" class="calendario-operacional-form-label">Atendimento</label>
+      <select
+        id="calendario-operacional-atendimento"
+        v-model="formData.ativo"
+        class="calendario-operacional-form-select"
+      >
+        <option :value="true">Ativo</option>
+        <option :value="false">Inativo (sem atendimento)</option>
+      </select>
+      <p class="calendario-operacional-form-helper">
+        Descreve esta data específica. Inativo bloqueia novas reservas, sem alterar as existentes.
       </p>
     </div>
 
@@ -33,7 +62,7 @@
         id="calendario-operacional-observacao"
         v-model="formData.observacao"
         type="text"
-        placeholder="Ex.: Feriado municipal, expediente especial..."
+        placeholder="Ex.: Feriado municipal, ponto facultativo, sem equipe..."
         class="calendario-operacional-form-input"
       />
     </div>
@@ -42,14 +71,16 @@
 
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue'
-import type {
-  CalendarioOperacionalMock,
-  CalendarioOperacionalFormData,
-  CalendarioOperacionalSugestao
-} from '@/utils/calendarioOperacionalMock'
+import {
+  REGIME_OPCOES,
+  TIPO_CONFIGURACAO_OPCOES,
+  type CalendarioConfiguracao,
+  type CalendarioOperacionalFormData,
+  type CalendarioOperacionalSugestao
+} from '@/utils/calendarioOperacional'
 
 interface Props {
-  initialData?: CalendarioOperacionalMock | null
+  initialData?: CalendarioConfiguracao | null
   sugestao?: CalendarioOperacionalSugestao | null
   mode?: 'create' | 'edit'
 }
@@ -64,9 +95,14 @@ const emit = defineEmits<{
   'update:form-data': [value: CalendarioOperacionalFormData]
 }>()
 
+const regimeOpcoes = REGIME_OPCOES
+const tipoOpcoes = TIPO_CONFIGURACAO_OPCOES
+
 const formData = reactive<CalendarioOperacionalFormData>({
   data: '',
   regime: 'NORMAL',
+  ativo: true,
+  tipo_configuracao: 'OUTRO',
   observacao: ''
 })
 
@@ -82,7 +118,9 @@ watch(
     if (data) {
       formData.data = data.data
       formData.regime = data.regime
-      formData.observacao = data.observacao
+      formData.ativo = data.ativo
+      formData.tipo_configuracao = data.tipo_configuracao
+      formData.observacao = data.observacao ?? ''
     }
   },
   { immediate: true }
@@ -94,6 +132,8 @@ watch(
     if (sugestao && !props.initialData) {
       formData.data = sugestao.data
       formData.regime = sugestao.regime
+      formData.ativo = sugestao.ativo
+      formData.tipo_configuracao = sugestao.tipo_configuracao
       formData.observacao = ''
     }
   },

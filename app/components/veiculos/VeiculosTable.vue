@@ -7,30 +7,55 @@
             <th class="veiculos-header-cell">Identificação</th>
             <th class="veiculos-header-cell">Placa</th>
             <th class="veiculos-header-cell">Tipo</th>
-            <th class="veiculos-header-cell">Equipamento</th>
+            <th class="veiculos-header-cell">Modelo</th>
             <th class="veiculos-header-cell">Situação</th>
             <th class="veiculos-header-cell veiculos-header-cell--actions">Ações</th>
           </tr>
         </thead>
         <tbody>
-          <VeiculoTableRow v-for="veiculo in veiculos" :key="veiculo.id" :veiculo="veiculo" />
+          <VeiculoTableRow
+            v-for="veiculo in veiculos"
+            :key="veiculo.id"
+            :veiculo="veiculo"
+            :saving="savingId === veiculo.id"
+            @visualizar="$emit('visualizar', $event)"
+            @editar="$emit('editar', $event)"
+            @alterar-ativo="$emit('alterar-ativo', $event)"
+          />
         </tbody>
       </table>
     </div>
 
-    <VeiculosPagination />
+    <VeiculosPagination
+      :page="page"
+      :page-size="pageSize"
+      :total="total"
+      @update:page="$emit('update:page', $event)"
+    />
   </div>
-
-  <VeiculosEmptyState v-if="veiculos.length === 0" />
 </template>
 
 <script setup lang="ts">
 import VeiculoTableRow from './VeiculoTableRow.vue'
 import VeiculosPagination from './VeiculosPagination.vue'
-import VeiculosEmptyState from './VeiculosEmptyState.vue'
-import { veiculosMock } from '@/utils/veiculosMock'
+import type { Veiculo } from '@/utils/veiculos'
 
-const veiculos = veiculosMock
+interface Props {
+  veiculos: Veiculo[]
+  savingId: string | null
+  page: number
+  pageSize: number
+  total: number
+}
+
+defineProps<Props>()
+
+defineEmits<{
+  visualizar: [veiculo: Veiculo]
+  editar: [veiculo: Veiculo]
+  'alterar-ativo': [veiculo: Veiculo]
+  'update:page': [value: number]
+}>()
 </script>
 
 <style scoped>

@@ -9,10 +9,16 @@
       <header class="calendario-operacional-modal-header">
         <div class="calendario-operacional-modal-header-text">
           <h2 :id="`calendario-operacional-modal-title-${mode}`" class="calendario-operacional-modal-title">
-            {{ mode === 'edit' ? 'Editar Configuração' : 'Nova Configuração' }}
+            {{ confirmandoRemocao ? 'Restaurar padrão' : mode === 'edit' ? 'Editar Configuração' : 'Nova Configuração' }}
           </h2>
           <p class="calendario-operacional-modal-subtitle">
-            {{ mode === 'edit' ? 'Atualize a configuração da data.' : 'Cadastre um feriado ou exceção de regime para uma data.' }}
+            {{
+              confirmandoRemocao
+                ? 'A configuração manual desta data será removida.'
+                : mode === 'edit'
+                  ? 'Atualize a configuração da data.'
+                  : 'Cadastre uma exceção (feriado, ponto facultativo, etc.) para uma data.'
+            }}
           </p>
         </div>
         <button
@@ -26,30 +32,73 @@
       </header>
 
       <div class="calendario-operacional-modal-body">
-        <CalendarioOperacionalForm
-          ref="formRef"
-          :initial-data="configuracao"
-          :sugestao="sugestao"
-          :mode="mode"
-          @update:form-data="formData = $event"
-        />
+        <template v-if="confirmandoRemocao">
+          <p class="calendario-operacional-modal-confirm-text">
+            Esta data voltará a seguir a regra automática (dia útil, fim de semana ou feriado oficial).
+          </p>
+          <p v-if="error" class="calendario-operacional-modal-error" role="alert">{{ error }}</p>
+        </template>
+
+        <template v-else>
+          <CalendarioOperacionalForm
+            ref="formRef"
+            :initial-data="configuracao"
+            :sugestao="sugestao"
+            :mode="mode"
+            @update:form-data="formData = $event"
+          />
+          <p v-if="error" class="calendario-operacional-modal-error" role="alert">{{ error }}</p>
+        </template>
       </div>
 
       <footer class="calendario-operacional-modal-footer">
-        <button
-          type="button"
-          class="calendario-operacional-modal-btn calendario-operacional-modal-btn--secondary"
-          @click="$emit('close')"
-        >
-          Cancelar
-        </button>
-        <button
-          type="button"
-          class="calendario-operacional-modal-btn calendario-operacional-modal-btn--primary"
-          @click="onSave"
-        >
-          {{ mode === 'edit' ? 'Salvar alterações' : 'Salvar' }}
-        </button>
+        <template v-if="confirmandoRemocao">
+          <button
+            type="button"
+            class="calendario-operacional-modal-btn calendario-operacional-modal-btn--secondary"
+            :disabled="loading"
+            @click="confirmandoRemocao = false"
+          >
+            Voltar
+          </button>
+          <button
+            type="button"
+            class="calendario-operacional-modal-btn calendario-operacional-modal-btn--danger"
+            :disabled="loading"
+            @click="$emit('remove')"
+          >
+            {{ loading ? 'Restaurando...' : 'Confirmar remoção' }}
+          </button>
+        </template>
+
+        <template v-else>
+          <button
+            v-if="mode === 'edit'"
+            type="button"
+            class="calendario-operacional-modal-btn calendario-operacional-modal-btn--danger-ghost"
+            :disabled="loading"
+            @click="confirmandoRemocao = true"
+          >
+            Restaurar padrão
+          </button>
+          <span class="calendario-operacional-modal-spacer" />
+          <button
+            type="button"
+            class="calendario-operacional-modal-btn calendario-operacional-modal-btn--secondary"
+            :disabled="loading"
+            @click="$emit('close')"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="calendario-operacional-modal-btn calendario-operacional-modal-btn--primary"
+            :disabled="loading"
+            @click="onSave"
+          >
+            {{ loading ? 'Salvando...' : mode === 'edit' ? 'Salvar alterações' : 'Salvar' }}
+          </button>
+        </template>
       </footer>
     </div>
   </div>
@@ -60,32 +109,40 @@ import { ref } from 'vue'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
 import CalendarioOperacionalForm from './CalendarioOperacionalForm.vue'
 import type {
-  CalendarioOperacionalMock,
+  CalendarioConfiguracao,
   CalendarioOperacionalFormData,
   CalendarioOperacionalSugestao
-} from '@/utils/calendarioOperacionalMock'
+} from '@/utils/calendarioOperacional'
 
 interface Props {
   mode?: 'create' | 'edit'
-  configuracao?: CalendarioOperacionalMock | null
+  configuracao?: CalendarioConfiguracao | null
   sugestao?: CalendarioOperacionalSugestao | null
+  loading?: boolean
+  error?: string | null
 }
 
 withDefaults(defineProps<Props>(), {
   mode: 'create',
   configuracao: null,
-  sugestao: null
+  sugestao: null,
+  loading: false,
+  error: null
 })
 
 const emit = defineEmits<{
   close: []
   save: [data: CalendarioOperacionalFormData]
+  remove: []
 }>()
 
 const formRef = ref<InstanceType<typeof CalendarioOperacionalForm>>()
+const confirmandoRemocao = ref(false)
 const formData = ref<CalendarioOperacionalFormData>({
   data: '',
   regime: 'NORMAL',
+  ativo: true,
+  tipo_configuracao: 'OUTRO',
   observacao: ''
 })
 
@@ -169,11 +226,6 @@ const onSave = () => {
   color: #111827;
 }
 
-.calendario-operacional-modal-close:focus-visible {
-  outline: 2px solid #004790;
-  outline-offset: -2px;
-}
-
 .calendario-operacional-modal-close svg {
   width: 20px;
   height: 20px;
@@ -183,6 +235,22 @@ const onSave = () => {
   padding: 24px 28px;
   overflow-y: auto;
   flex: 1;
+}
+
+.calendario-operacional-modal-confirm-text {
+  margin: 0;
+  font-size: 14px;
+  color: #374151;
+}
+
+.calendario-operacional-modal-error {
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 13px;
 }
 
 .calendario-operacional-modal-footer {
@@ -196,6 +264,10 @@ const onSave = () => {
   flex-wrap: wrap;
 }
 
+.calendario-operacional-modal-spacer {
+  flex: 1;
+}
+
 .calendario-operacional-modal-btn {
   display: inline-flex;
   align-items: center;
@@ -206,38 +278,53 @@ const onSave = () => {
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
+  border: 1px solid transparent;
   transition: background-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.1s;
+}
+
+.calendario-operacional-modal-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .calendario-operacional-modal-btn--primary {
   background-color: #004790;
   color: #fff;
-  border: 1px solid #004790;
+  border-color: #004790;
 }
 
-.calendario-operacional-modal-btn--primary:hover {
+.calendario-operacional-modal-btn--primary:hover:not(:disabled) {
   background-color: #003570;
-  border-color: #003570;
-}
-
-.calendario-operacional-modal-btn--primary:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 71, 144, 0.35);
 }
 
 .calendario-operacional-modal-btn--secondary {
   background: #fff;
   color: #4b5563;
-  border: 1px solid #d1d5db;
+  border-color: #d1d5db;
 }
 
-.calendario-operacional-modal-btn--secondary:hover {
+.calendario-operacional-modal-btn--secondary:hover:not(:disabled) {
   background: #f3f4f6;
 }
 
-.calendario-operacional-modal-btn--secondary:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 71, 144, 0.25);
+.calendario-operacional-modal-btn--danger {
+  background: #dc2626;
+  color: #fff;
+  border-color: #dc2626;
+}
+
+.calendario-operacional-modal-btn--danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.calendario-operacional-modal-btn--danger-ghost {
+  background: #fff;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.calendario-operacional-modal-btn--danger-ghost:hover:not(:disabled) {
+  background: #fef2f2;
 }
 
 @media (max-width: 600px) {
@@ -267,6 +354,10 @@ const onSave = () => {
     padding: 14px 20px 16px;
     flex-direction: column-reverse;
     align-items: stretch;
+  }
+
+  .calendario-operacional-modal-spacer {
+    display: none;
   }
 
   .calendario-operacional-modal-btn {

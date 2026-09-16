@@ -7,32 +7,57 @@
             <th class="reservas-header-cell">Veículo</th>
             <th class="reservas-header-cell">Placa</th>
             <th class="reservas-header-cell">Tipo</th>
+            <th class="reservas-header-cell">Solicitante</th>
             <th class="reservas-header-cell">Data</th>
-            <th class="reservas-header-cell">Regime</th>
             <th class="reservas-header-cell">Tempo</th>
             <th class="reservas-header-cell">Status</th>
             <th class="reservas-header-cell reservas-header-cell--actions">Ações</th>
           </tr>
         </thead>
         <tbody>
-          <ReservaTableRow v-for="reserva in reservas" :key="reserva.id" :reserva="reserva" />
+          <ReservaTableRow
+            v-for="reserva in reservas"
+            :key="reserva.id"
+            :reserva="reserva"
+            :pode-cancelar="podeCancelar && reserva.status === 'RESERVADA'"
+            :cancelando="cancelandoId === reserva.id"
+            @visualizar="$emit('visualizar', $event)"
+            @cancelar="$emit('cancelar', $event)"
+          />
         </tbody>
       </table>
     </div>
 
-    <ReservasPagination />
+    <ReservasPagination
+      :page="page"
+      :page-size="pageSize"
+      :total="total"
+      @update:page="$emit('update:page', $event)"
+    />
   </div>
-
-  <ReservasEmptyState v-if="reservas.length === 0" />
 </template>
 
 <script setup lang="ts">
 import ReservaTableRow from './ReservaTableRow.vue'
 import ReservasPagination from './ReservasPagination.vue'
-import ReservasEmptyState from './ReservasEmptyState.vue'
-import { reservasMock } from '@/utils/reservasMock'
+import type { ReservaAdmin } from '@/utils/reservasAdmin'
 
-const reservas = reservasMock
+interface Props {
+  reservas: ReservaAdmin[]
+  page: number
+  pageSize: number
+  total: number
+  podeCancelar: boolean
+  cancelandoId: string | null
+}
+
+defineProps<Props>()
+
+defineEmits<{
+  visualizar: [reserva: ReservaAdmin]
+  cancelar: [reserva: ReservaAdmin]
+  'update:page': [value: number]
+}>()
 </script>
 
 <style scoped>

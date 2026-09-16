@@ -1,38 +1,48 @@
 <template>
   <tr class="reserva-row">
-    <td class="reserva-cell reserva-cell--vehicle">
-      <span class="reserva-vehicle-id">{{ reserva.vehicle }}</span>
+    <td class="reserva-cell reserva-cell--vehicle" data-label="Veículo">
+      <span class="reserva-vehicle-id">{{ reserva.veiculo }}</span>
     </td>
-    <td class="reserva-cell">
-      <span class="reserva-plate">{{ reserva.plate }}</span>
+    <td class="reserva-cell" data-label="Placa">
+      <span class="reserva-plate">{{ reserva.placa }}</span>
     </td>
-    <td class="reserva-cell">
-      <span>{{ reserva.type }}</span>
+    <td class="reserva-cell" data-label="Tipo">
+      <span>{{ reserva.tipo }}</span>
     </td>
-    <td class="reserva-cell">
-      <span class="reserva-date">{{ reserva.date }}</span>
+    <td class="reserva-cell" data-label="Solicitante">
+      <span class="reserva-solicitante-nome">{{ reserva.solicitante }}</span>
     </td>
-    <td class="reserva-cell">
-      <span class="reserva-regime" :class="`reserva-regime--${reserva.regime.toLowerCase()}`">
-        {{ reserva.regime === 'PLANTAO' ? 'PLANTÃO' : reserva.regime }}
-      </span>
+    <td class="reserva-cell" data-label="Data">
+      <span class="reserva-date">{{ formatarDataCurta(reserva.data) }}</span>
     </td>
-    <td class="reserva-cell">
-      <span>{{ reserva.time }}</span>
+    <td class="reserva-cell" data-label="Tempo">
+      <span>{{ reserva.tempoEstimado }} min</span>
     </td>
-    <td class="reserva-cell">
+    <td class="reserva-cell" data-label="Status">
       <AgendaStatusBadge :status="reserva.status" />
     </td>
-    <td class="reserva-cell reserva-cell--actions">
+    <td class="reserva-cell reserva-cell--actions" data-label="Ações">
       <div class="reserva-actions">
-        <button type="button" class="reserva-action-btn" title="Visualizar" aria-label="Visualizar reserva">
+        <button
+          type="button"
+          class="reserva-action-btn"
+          title="Visualizar"
+          aria-label="Visualizar reserva"
+          @click="$emit('visualizar', reserva)"
+        >
           <EyeIcon aria-hidden="true" />
         </button>
-        <button type="button" class="reserva-action-btn" title="Editar" aria-label="Editar reserva">
-          <PencilSquareIcon aria-hidden="true" />
-        </button>
-        <button type="button" class="reserva-action-btn reserva-action-btn--danger" title="Cancelar" aria-label="Cancelar reserva">
-          <XMarkIcon aria-hidden="true" />
+        <button
+          v-if="podeCancelar"
+          type="button"
+          class="reserva-action-btn reserva-action-btn--danger"
+          title="Cancelar"
+          aria-label="Cancelar reserva"
+          :disabled="cancelando"
+          @click="$emit('cancelar', reserva)"
+        >
+          <span v-if="cancelando" class="reserva-action-spinner" aria-hidden="true" />
+          <XMarkIcon v-else aria-hidden="true" />
         </button>
       </div>
     </td>
@@ -41,14 +51,21 @@
 
 <script setup lang="ts">
 import AgendaStatusBadge from '@/components/agenda/AgendaStatusBadge.vue'
-import { EyeIcon, PencilSquareIcon, XMarkIcon } from '@heroicons/vue/24/outline'
-import type { ReservaMock } from '@/utils/reservasMock'
+import { EyeIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { formatarDataCurta, type ReservaAdmin } from '@/utils/reservasAdmin'
 
 interface Props {
-  reserva: ReservaMock
+  reserva: ReservaAdmin
+  podeCancelar: boolean
+  cancelando: boolean
 }
 
 defineProps<Props>()
+
+defineEmits<{
+  visualizar: [reserva: ReservaAdmin]
+  cancelar: [reserva: ReservaAdmin]
+}>()
 </script>
 
 <style scoped>
@@ -87,27 +104,13 @@ defineProps<Props>()
   letter-spacing: 0.02em;
 }
 
+.reserva-solicitante-nome {
+  font-weight: 500;
+  color: #1f2937;
+}
+
 .reserva-date {
   color: #4b5563;
-}
-
-.reserva-regime {
-  display: inline-flex;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-}
-
-.reserva-regime--normal {
-  background: #f3f4f6;
-  color: #4b5563;
-}
-
-.reserva-regime--plantao {
-  background: #fef3c7;
-  color: #92400e;
 }
 
 .reserva-cell--actions {
@@ -135,9 +138,19 @@ defineProps<Props>()
   transition: background-color 0.15s, color 0.15s;
 }
 
-.reserva-action-btn:hover {
+.reserva-action-btn:hover:not(:disabled) {
   background: #f3f4f6;
   color: #004790;
+}
+
+.reserva-action-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.reserva-action-btn--danger:hover:not(:disabled) {
+  background: #fee2e2;
+  color: #dc2626;
 }
 
 .reserva-action-btn:focus-visible {
@@ -145,14 +158,24 @@ defineProps<Props>()
   outline-offset: -2px;
 }
 
-.reserva-action-btn--danger:hover {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
 .reserva-action-btn svg {
   width: 18px;
   height: 18px;
+}
+
+.reserva-action-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #fecaca;
+  border-top-color: #dc2626;
+  border-radius: 50%;
+  animation: reserva-action-spin 0.7s linear infinite;
+}
+
+@keyframes reserva-action-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 768px) {

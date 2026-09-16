@@ -2,25 +2,60 @@
   <div class="veiculo-form-section">
     <h4 class="veiculo-form-section-title">Dados do veículo</h4>
     <div class="veiculo-form-grid">
-      <BaseInput label="Marca" placeholder="Ex: Mercedes-Benz" />
-      <BaseInput label="Modelo" placeholder="Ex: Atego 1719" />
-      <BaseInput label="Ano de fabricação" placeholder="Ex: 2022" />
-      <BaseInput label="Ano/modelo" placeholder="Ex: 2023" />
+      <BaseInput
+        label="Modelo"
+        placeholder="Ex: Atego 1719"
+        :model-value="form.ds_modelo"
+        :disabled="readonly"
+        @update:model-value="form.ds_modelo = $event"
+      />
+      <BaseInput
+        label="Ano"
+        type="number"
+        placeholder="Ex: 2022"
+        :model-value="form.ano"
+        :disabled="readonly"
+        @update:model-value="form.ano = $event"
+      />
       <div class="veiculo-form-field">
-        <label class="veiculo-form-label">Combustível</label>
+        <label class="veiculo-form-label" for="veiculo-combustivel">Combustível</label>
         <div class="veiculo-form-select-wrap">
-          <input
-            type="text"
+          <select
+            id="veiculo-combustivel"
             class="veiculo-form-input"
-            placeholder="Selecione"
-            readonly
-          />
+            :value="form.ds_combustivel"
+            :disabled="readonly"
+            @change="form.ds_combustivel = ($event.target as HTMLSelectElement).value"
+          >
+            <option value="">Não informado</option>
+            <option v-for="item in combustiveis" :key="item" :value="item">{{ item }}</option>
+          </select>
           <ChevronDownIcon class="veiculo-form-select-icon" aria-hidden="true" />
         </div>
       </div>
-      <BaseInput label="Cor" placeholder="Ex: Branco" />
-      <BaseInput label="Placa" placeholder="Ex: ABC-1A23" />
-      <BaseInput label="Hodômetro" placeholder="Ex: 150000" />
+      <BaseInput
+        label="Placa"
+        placeholder="Ex: ABC1A23"
+        :model-value="form.nr_placa_transport"
+        :disabled="readonly"
+        @update:model-value="form.nr_placa_transport = $event"
+      />
+      <div class="veiculo-form-field">
+        <label class="veiculo-form-label" for="veiculo-situacao">Situação</label>
+        <div class="veiculo-form-select-wrap">
+          <select
+            id="veiculo-situacao"
+            class="veiculo-form-input"
+            :value="form.ativo ? 'ATIVO' : 'INATIVO'"
+            :disabled="readonly"
+            @change="form.ativo = ($event.target as HTMLSelectElement).value === 'ATIVO'"
+          >
+            <option value="ATIVO">Ativo</option>
+            <option value="INATIVO">Inativo</option>
+          </select>
+          <ChevronDownIcon class="veiculo-form-select-icon" aria-hidden="true" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -28,6 +63,18 @@
 <script setup lang="ts">
 import BaseInput from '@/components/BaseInput.vue'
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
+import type { VeiculoFormData } from '@/utils/veiculos'
+
+interface Props {
+  form: VeiculoFormData
+  readonly?: boolean
+}
+
+withDefaults(defineProps<Props>(), {
+  readonly: false
+})
+
+const combustiveis = ['FLEX', 'GASOLINA', 'DIESEL']
 </script>
 
 <style scoped>
@@ -87,8 +134,10 @@ import { ChevronDownIcon } from '@heroicons/vue/24/outline'
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.veiculo-form-input::placeholder {
-  color: #9ca3af;
+.veiculo-form-input:disabled {
+  background: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
 }
 
 .veiculo-form-input:focus {

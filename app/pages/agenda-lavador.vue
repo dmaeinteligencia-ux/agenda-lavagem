@@ -12,6 +12,7 @@
       :utilizado="utilizadoMinutos"
       :disponivel="disponivelMinutos"
       :reservas="qtdReservas"
+      :dia-ativo="diaAtivo"
     />
     <div class="agenda-main-grid">
       <div class="agenda-main-left">
@@ -37,14 +38,17 @@
         />
       </div>
       <div class="agenda-main-right">
+        <AgendaNewReservationButton class="agenda-new-reservation" />
         <AgendaDayDetails
+          class="agenda-day-details-panel"
+          :data="selectedDate"
           :regime="regime"
-          :capacidade="capacidadeMinutos"
-          :utilizado="utilizadoMinutos"
-          :disponivel="disponivelMinutos"
-          :reservas="qtdReservas"
+          :dia-ativo="diaAtivo"
+          :progresso="progressoTexto"
+          :situacao-atual="situacaoAtual"
+          :pendencias="pendencias"
+          :tem-pendencias="temPendencias"
         />
-        <AgendaNewReservationButton />
       </div>
     </div>
 
@@ -76,6 +80,7 @@ import AgendaNewReservationButton from '@/components/agenda/AgendaNewReservation
 import AgendaActionModal from '@/components/agenda/AgendaActionModal.vue'
 import { useReservas } from '@/composables/useReservas'
 import {
+  resumoStatusDia,
   mapReservaToAgendaItem,
   motivosNaoAtendimento,
   motivosNaoConclusao,
@@ -94,6 +99,7 @@ const {
   reservas,
   horarios,
   capacidade,
+  diaOperacional,
   loading,
   error,
   fetchReservas,
@@ -167,7 +173,58 @@ const capacidadeMinutos = computed(() => capacidade.value?.capacidadeMinutos ?? 
 const utilizadoMinutos = computed(() => capacidade.value?.reservadoMinutos ?? 0)
 const disponivelMinutos = computed(() => capacidade.value?.disponivelMinutos ?? null)
 const regime = computed(() => capacidade.value?.regime ?? null)
+const diaAtivo = computed(() => (diaOperacional.value ? diaOperacional.value.ativo : null))
 const qtdReservas = computed(() => reservas.value.length)
+
+const resumoDia = computed(() => resumoStatusDia(reservas.value.map((reserva) => reserva.status)))
+
+const progressoTexto = computed(() => {
+  if (resumoDia.value.total === 0) {
+    return '0 reservas neste dia'
+  }
+  return `${resumoDia.value.finalizadas} de ${resumoDia.value.total} reservas finalizadas`
+})
+
+const situacaoAtual = computed(() => {
+  const partes: string[] = []
+
+  if (resumoDia.value.aguardando > 0) {
+    partes.push(`${resumoDia.value.aguardando} aguardando início`)
+  }
+  if (resumoDia.value.emLavagem > 0) {
+    partes.push(`${resumoDia.value.emLavagem} em lavagem`)
+  }
+
+  return partes.length > 0 ? partes.join(' · ') : 'Sem reservas em andamento.'
+})
+
+const pendenciasPartes = computed(() => {
+  const partes: string[] = []
+  const { naoAtendida, naoConcluida, naoCompareceu, expirada } = resumoDia.value
+
+  if (naoAtendida > 0) {
+    partes.push(`${naoAtendida} não atendida${naoAtendida > 1 ? 's' : ''}`)
+  }
+  if (naoConcluida > 0) {
+    partes.push(`${naoConcluida} não concluída${naoConcluida > 1 ? 's' : ''}`)
+  }
+  if (naoCompareceu > 0) {
+    partes.push(`${naoCompareceu} não compareceu`)
+  }
+  if (expirada > 0) {
+    partes.push(`${expirada} expirada${expirada > 1 ? 's' : ''}`)
+  }
+
+  return partes
+})
+
+const pendencias = computed(() =>
+  pendenciasPartes.value.length > 0
+    ? pendenciasPartes.value.join(' · ')
+    : 'Sem pendências operacionais.'
+)
+
+const temPendencias = computed(() => pendenciasPartes.value.length > 0)
 
 function abrirAcao(chave: AcaoChave, item: AgendaReservaItem) {
   actionError.value = null
@@ -365,6 +422,24 @@ onMounted(async () => {
 @media (max-width: 1024px) {
   .agenda-main-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Mobile/tablet: reordena para Nova Reserva -> Agenda do Dia -> Resumo operacional,
+     sem duplicar o botão no DOM. */
+  .agenda-main-right {
+    display: contents;
+  }
+
+  .agenda-new-reservation {
+    order: 1;
+  }
+
+  .agenda-main-left {
+    order: 2;
+  }
+
+  .agenda-day-details-panel {
+    order: 3;
   }
 
   .agenda-page {

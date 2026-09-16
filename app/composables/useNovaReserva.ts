@@ -15,6 +15,7 @@ export interface VeiculoBusca {
   nr_placa_transport: string
   tipo_veiculo_id: string | null
   tipo_veiculo_descricao: string | null
+  ativo: boolean
 }
 
 export interface DisponibilidadeDia {

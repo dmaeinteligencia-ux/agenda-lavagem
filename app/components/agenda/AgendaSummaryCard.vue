@@ -5,7 +5,10 @@
     </div>
     <div class="agenda-summary-card-body">
       <span class="agenda-summary-card-title">{{ title }}</span>
-      <span class="agenda-summary-card-value">{{ value }}</span>
+      <span
+        class="agenda-summary-card-value"
+        :class="{ 'agenda-summary-card-value--compact': compactValue }"
+      >{{ value }}</span>
       <span class="agenda-summary-card-desc">{{ description }}</span>
     </div>
   </div>
@@ -20,10 +23,12 @@ interface Props {
   description: string
   icon: Component
   variant?: 'blue' | 'green' | 'amber' | 'red'
+  compactValue?: boolean
 }
 
 withDefaults(defineProps<Props>(), {
-  variant: 'blue'
+  variant: 'blue',
+  compactValue: false
 })
 </script>
 
@@ -76,6 +81,11 @@ withDefaults(defineProps<Props>(), {
   font-size: 22px;
   font-weight: 700;
   color: #111827;
+}
+
+.agenda-summary-card-value--compact {
+  font-size: 14px;
+  line-height: 1.3;
 }
 
 .agenda-summary-card-desc {

@@ -27,7 +27,7 @@
 
     <div class="calendario-operacional-scroll">
       <div class="calendario-operacional-weekdays">
-        <span v-for="dia in DIAS_SEMANA" :key="dia" class="calendario-operacional-weekday">{{ dia }}</span>
+        <span v-for="dia in DIAS_SEMANA_ABREV" :key="dia" class="calendario-operacional-weekday">{{ dia }}</span>
       </div>
 
       <div class="calendario-operacional-grid">
@@ -37,16 +37,13 @@
             v-else
             :dia="celula.dia"
             :iso="celula.iso"
-            :config="celula.config"
-            @click="$emit('select-day', { data: celula.iso, config: celula.config })"
+            :resolvido="celula.resolvido"
+            :eh-hoje="celula.iso === hojeIso"
+            @click="$emit('select-day', { data: celula.iso, resolvido: celula.resolvido })"
           />
         </template>
       </div>
     </div>
-
-    <p v-if="configuracoes.length === 0" class="calendario-operacional-aviso">
-      Nenhuma configuração específica cadastrada para este período.
-    </p>
 
     <div class="calendario-operacional-legenda">
       <span class="calendario-operacional-legenda-item">
@@ -58,45 +55,68 @@
         PLANTÃO
       </span>
       <span class="calendario-operacional-legenda-item">
+        <span class="calendario-operacional-legenda-star" aria-hidden="true">★</span>
+        Feriado oficial
+      </span>
+      <span class="calendario-operacional-legenda-item">
         <span class="calendario-operacional-legenda-dot calendario-operacional-legenda-dot--especifica" aria-hidden="true" />
-        Configuração específica
+        Configuração manual
+      </span>
+      <span class="calendario-operacional-legenda-item">
+        <span class="calendario-operacional-legenda-dot calendario-operacional-legenda-dot--inativo" aria-hidden="true" />
+        Sem atendimento
       </span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 import CalendarioOperacionalDay from './CalendarioOperacionalDay.vue'
 import {
+  DIAS_SEMANA_ABREV,
   MESES,
   getDiasNoMes,
   getPrimeiroDiaDaSemana,
-  toISODate
-} from '@/utils/calendarioOperacionalMock'
-import type { CalendarioOperacionalMock } from '@/utils/calendarioOperacionalMock'
+  hojeISO,
+  resolverDia,
+  toISODate,
+  type CalendarioConfiguracao,
+  type DiaOperacional,
+  type FeriadoOficial
+} from '@/utils/calendarioOperacional'
 
 interface Props {
-  configuracoes: CalendarioOperacionalMock[]
+  ano: number
+  mes: number
+  configuracoes: CalendarioConfiguracao[]
+  feriados: FeriadoOficial[]
 }
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  'select-day': [payload: { data: string; config: CalendarioOperacionalMock | null }]
+  'change-month': [payload: { ano: number; mes: number }]
+  'select-day': [payload: { data: string; resolvido: DiaOperacional }]
 }>()
 
-const DIAS_SEMANA = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB']
-
-const hoje = new Date()
-const ano = ref(hoje.getFullYear())
-const mes = ref(hoje.getMonth())
+const hojeIso = hojeISO()
 
 const configPorData = computed(() => {
-  const mapa = new Map<string, CalendarioOperacionalMock>()
+  const mapa = new Map<string, CalendarioConfiguracao>()
   for (const config of props.configuracoes) {
     mapa.set(config.data, config)
+  }
+  return mapa
+})
+
+const feriadoPorData = computed(() => {
+  const mapa = new Map<string, FeriadoOficial>()
+  for (const feriado of props.feriados) {
+    if (!mapa.has(feriado.data)) {
+      mapa.set(feriado.data, feriado)
+    }
   }
   return mapa
 })
@@ -104,12 +124,12 @@ const configPorData = computed(() => {
 interface Celula {
   dia: number
   iso: string
-  config: CalendarioOperacionalMock | null
+  resolvido: DiaOperacional
 }
 
 const celulas = computed<Array<Celula | null>>(() => {
-  const primeiro = getPrimeiroDiaDaSemana(ano.value, mes.value)
-  const total = getDiasNoMes(ano.value, mes.value)
+  const primeiro = getPrimeiroDiaDaSemana(props.ano, props.mes)
+  const total = getDiasNoMes(props.ano, props.mes)
   const resultado: Array<Celula | null> = []
 
   for (let i = 0; i < primeiro; i++) {
@@ -117,11 +137,11 @@ const celulas = computed<Array<Celula | null>>(() => {
   }
 
   for (let d = 1; d <= total; d++) {
-    const iso = toISODate(ano.value, mes.value, d)
+    const iso = toISODate(props.ano, props.mes, d)
     resultado.push({
       dia: d,
       iso,
-      config: configPorData.value.get(iso) ?? null
+      resolvido: resolverDia(iso, feriadoPorData.value.get(iso) ?? null, configPorData.value.get(iso) ?? null)
     })
   }
 
@@ -129,26 +149,20 @@ const celulas = computed<Array<Celula | null>>(() => {
 })
 
 const mesAnterior = () => {
-  if (mes.value === 0) {
-    mes.value = 11
-    ano.value--
-  } else {
-    mes.value--
-  }
+  const mes = props.mes === 0 ? 11 : props.mes - 1
+  const ano = props.mes === 0 ? props.ano - 1 : props.ano
+  emit('change-month', { ano, mes })
 }
 
 const proximoMes = () => {
-  if (mes.value === 11) {
-    mes.value = 0
-    ano.value++
-  } else {
-    mes.value++
-  }
+  const mes = props.mes === 11 ? 0 : props.mes + 1
+  const ano = props.mes === 11 ? props.ano + 1 : props.ano
+  emit('change-month', { ano, mes })
 }
 
 const irParaHoje = () => {
-  ano.value = hoje.getFullYear()
-  mes.value = hoje.getMonth()
+  const hoje = new Date()
+  emit('change-month', { ano: hoje.getFullYear(), mes: hoje.getMonth() })
 }
 </script>
 
@@ -274,13 +288,6 @@ const irParaHoje = () => {
   border: 1px dashed #e5e7eb;
 }
 
-.calendario-operacional-aviso {
-  margin: 12px 0 0;
-  font-size: 13px;
-  color: #6b7280;
-  text-align: center;
-}
-
 .calendario-operacional-legenda {
   display: flex;
   align-items: center;
@@ -319,6 +326,15 @@ const irParaHoje = () => {
   height: 8px;
   border: 2px solid #2563eb;
   background: transparent;
+}
+
+.calendario-operacional-legenda-dot--inativo {
+  background: #ef4444;
+}
+
+.calendario-operacional-legenda-star {
+  color: #f59e0b;
+  font-size: 12px;
 }
 
 @media (max-width: 640px) {

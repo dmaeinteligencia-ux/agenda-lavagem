@@ -47,6 +47,7 @@
           :utilization-percent="utilizacaoPercent"
           :estimated-time="tempoEstimado"
           :availability="disponibilidadeStatus"
+          :data-inativa="dataInativa"
         />
         <NovaReservaSummaryCard
           :vehicle="veiculoDisplay"
@@ -98,7 +99,7 @@ import NovaReservaAvailabilityCard from '@/components/nova-reserva/NovaReservaAv
 import NovaReservaSummaryCard from '@/components/nova-reserva/NovaReservaSummaryCard.vue'
 import NovaReservaActions from '@/components/nova-reserva/NovaReservaActions.vue'
 import { useNovaReserva } from '@/composables/useNovaReserva'
-import { toISODate, type NovaReservaVehicle } from '@/utils/reservas'
+import { diaSemAtendimento, toISODate, type NovaReservaVehicle } from '@/utils/reservas'
 
 definePageMeta({
   layout: 'default'
@@ -154,7 +155,8 @@ const veiculoDisplay = computed<NovaReservaVehicle>(() => {
     identification: veiculo.value.nome_frota || '—',
     plate: veiculo.value.nr_placa_transport,
     type: veiculo.value.tipo_veiculo_descricao || '—',
-    model: veiculo.value.ds_modelo || '—'
+    model: veiculo.value.ds_modelo || '—',
+    ativo: veiculo.value.ativo
   }
 })
 
@@ -202,14 +204,32 @@ const disponibilidadeStatus = computed<'Disponível' | 'Indisponível'>(() => {
   return d.disponivel ? 'Disponível' : 'Indisponível'
 })
 
+// Data sem atendimento: indisponível sem ser por capacidade/duplicidade.
+const dataInativa = computed(() => {
+  const d = disponibilidade.value
+  const v = veiculo.value
+  if (!d || !v) {
+    return false
+  }
+  return diaSemAtendimento({
+    disponivel: d.disponivel,
+    veiculoAtivo: v.ativo,
+    disponivelMinutos: d.disponivel_minutos,
+    tempoVeiculoMinutos: d.tempo_veiculo_minutos,
+    veiculoTemReserva: d.veiculo_tem_reserva
+  })
+})
+
 const podeConfirmar = computed(() => {
   return (
     !!solicitante.value &&
     !!veiculo.value &&
+    veiculo.value.ativo &&
     !!dataReserva.value &&
     !!disponibilidade.value &&
     disponibilidade.value.disponivel &&
-    !disponibilidade.value.veiculo_tem_reserva
+    !disponibilidade.value.veiculo_tem_reserva &&
+    !criandoReserva.value
   )
 })
 
@@ -278,6 +298,13 @@ watch([veiculo, dataReserva], async () => {
   if (!veiculo.value || !dataReserva.value) {
     return
   }
+
+  // Veículo inativo: não consulta disponibilidade e mantém o fluxo bloqueado.
+  if (!veiculo.value.ativo) {
+    disponibilidade.value = null
+    return
+  }
+
   erroGeral.value = null
   const r = await consultarDisponibilidade()
   if (!r.success) {

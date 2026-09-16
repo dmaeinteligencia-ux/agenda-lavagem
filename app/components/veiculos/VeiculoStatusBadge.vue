@@ -1,23 +1,16 @@
 <template>
-  <span class="veiculo-status-badge" :class="`veiculo-status-badge--${situacao.toLowerCase()}`">
+  <span class="veiculo-status-badge" :class="`veiculo-status-badge--${ativo ? 'ativo' : 'inativo'}`">
     <span class="veiculo-status-dot" aria-hidden="true" />
-    {{ label }}
+    {{ ativo ? 'Ativo' : 'Inativo' }}
   </span>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { VeiculoSituacao } from '@/utils/veiculosMock'
-
 interface Props {
-  situacao: VeiculoSituacao
+  ativo: boolean
 }
 
-const props = defineProps<Props>()
-
-const label = computed(() =>
-  props.situacao === 'ATIVO' ? 'Ativo' : 'Inativo'
-)
+defineProps<Props>()
 </script>
 
 <style scoped>

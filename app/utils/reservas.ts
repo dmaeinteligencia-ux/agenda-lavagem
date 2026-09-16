@@ -71,6 +71,45 @@ export const STATUS_LABELS: Record<ReservaStatus, string> = {
   NAO_CONCLUIDA: 'Não concluída'
 }
 
+export const STATUS_FINAIS: ReservaStatus[] = [
+  'CONCLUIDA',
+  'CANCELADA',
+  'EXPIRADA',
+  'NAO_COMPARECEU',
+  'NAO_ATENDIDA',
+  'NAO_CONCLUIDA'
+]
+
+export function isStatusFinal(status: ReservaStatus): boolean {
+  return STATUS_FINAIS.includes(status)
+}
+
+export interface ResumoStatusDia {
+  total: number
+  finalizadas: number
+  aguardando: number
+  emLavagem: number
+  naoAtendida: number
+  naoConcluida: number
+  naoCompareceu: number
+  expirada: number
+}
+
+export function resumoStatusDia(statuses: ReservaStatus[]): ResumoStatusDia {
+  const contar = (status: ReservaStatus) => statuses.filter((item) => item === status).length
+
+  return {
+    total: statuses.length,
+    finalizadas: statuses.filter((status) => isStatusFinal(status)).length,
+    aguardando: contar('RESERVADA'),
+    emLavagem: contar('EM_LAVAGEM'),
+    naoAtendida: contar('NAO_ATENDIDA'),
+    naoConcluida: contar('NAO_CONCLUIDA'),
+    naoCompareceu: contar('NAO_COMPARECEU'),
+    expirada: contar('EXPIRADA')
+  }
+}
+
 export function toISODate(d: Date): string {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
@@ -206,6 +245,25 @@ export function acoesParaReserva(
   }
 }
 
+export interface DiagnosticoDisponibilidade {
+  disponivel: boolean
+  veiculoAtivo: boolean
+  disponivelMinutos: number
+  tempoVeiculoMinutos: number
+  veiculoTemReserva: boolean
+}
+
+// Indisponível por DATA sem atendimento (e não por capacidade/duplicidade):
+// o veículo está ativo e há capacidade livre; logo o dia está inativo.
+export function diaSemAtendimento(diag: DiagnosticoDisponibilidade): boolean {
+  return (
+    !diag.disponivel &&
+    diag.veiculoAtivo &&
+    diag.disponivelMinutos >= diag.tempoVeiculoMinutos &&
+    !diag.veiculoTemReserva
+  )
+}
+
 export function mapAcaoError(message: string | null): string {
   if (!message) {
     return 'Não foi possível concluir a operação.'
@@ -227,6 +285,7 @@ export interface NovaReservaVehicle {
   plate: string
   type: string
   model: string
+  ativo?: boolean
 }
 
 export interface NovaReservaCapacity {

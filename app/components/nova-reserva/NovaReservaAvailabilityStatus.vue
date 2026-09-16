@@ -10,13 +10,19 @@ import { computed } from 'vue'
 
 interface Props {
   status: 'Disponível' | 'Indisponível'
+  dataInativa?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  dataInativa: false
+})
 
-const label = computed(() =>
-  props.status === 'Disponível' ? 'Disponível para reserva' : 'Indisponível'
-)
+const label = computed(() => {
+  if (props.dataInativa) {
+    return 'Sem atendimento nesta data'
+  }
+  return props.status === 'Disponível' ? 'Disponível para reserva' : 'Indisponível'
+})
 
 const variant = computed(() => (props.status === 'Disponível' ? 'ok' : 'blocked'))
 </script>

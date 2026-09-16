@@ -2,28 +2,28 @@
   <div class="reservas-summary">
     <AgendaSummaryCard
       title="Total"
-      :value="summary.total"
+      :value="String(summary.total)"
       description="Reservas no período"
       :icon="ClipboardDocumentListIcon"
       variant="blue"
     />
     <AgendaSummaryCard
       title="Reservadas"
-      :value="summary.reserved"
+      :value="String(summary.reserved)"
       description="Agendadas"
       :icon="CalendarDaysIcon"
       variant="red"
     />
     <AgendaSummaryCard
       title="Em Lavagem"
-      :value="summary.washing"
+      :value="String(summary.washing)"
       description="Em execução"
       :icon="BoltIcon"
       variant="amber"
     />
     <AgendaSummaryCard
       title="Concluídas"
-      :value="summary.completed"
+      :value="String(summary.completed)"
       description="Finalizadas"
       :icon="CheckCircleIcon"
       variant="green"
@@ -36,10 +36,10 @@ import AgendaSummaryCard from '@/components/agenda/AgendaSummaryCard.vue'
 import { ClipboardDocumentListIcon, CalendarDaysIcon, BoltIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
 
 interface ReservasSummaryData {
-  total: string
-  reserved: string
-  washing: string
-  completed: string
+  total: number
+  reserved: number
+  washing: number
+  completed: number
 }
 
 interface Props {

@@ -1,41 +1,36 @@
 <template>
   <div class="calendario-operacional-summary">
     <AgendaSummaryCard
-      title="Total de Configurações"
-      :value="summary.total"
-      description="Datas específicas cadastradas"
+      title="Configurações do mês"
+      :value="String(summary.configuracoes)"
+      description="Exceções cadastradas"
       :icon="CalendarDaysIcon"
       variant="blue"
     />
     <AgendaSummaryCard
-      title="Datas em NORMAL"
-      :value="summary.normal"
-      description="Configurações específicas"
-      :icon="SunIcon"
-      variant="blue"
-    />
-    <AgendaSummaryCard
-      title="Datas em PLANTÃO"
-      :value="summary.plantao"
-      description="Configurações específicas"
+      title="Plantões manuais"
+      :value="String(summary.plantoes)"
+      description="Exceções em PLANTÃO"
       :icon="MoonIcon"
       variant="amber"
+    />
+    <AgendaSummaryCard
+      title="Dias sem atendimento"
+      :value="String(summary.semAtendimento)"
+      description="Exceções inativas"
+      :icon="XCircleIcon"
+      variant="red"
     />
   </div>
 </template>
 
 <script setup lang="ts">
 import AgendaSummaryCard from '@/components/agenda/AgendaSummaryCard.vue'
-import { CalendarDaysIcon, SunIcon, MoonIcon } from '@heroicons/vue/24/outline'
-
-interface CalendarioOperacionalSummaryData {
-  total: string
-  normal: string
-  plantao: string
-}
+import { CalendarDaysIcon, MoonIcon, XCircleIcon } from '@heroicons/vue/24/outline'
+import type { ResumoCalendario } from '@/utils/calendarioOperacional'
 
 interface Props {
-  summary: CalendarioOperacionalSummaryData
+  summary: ResumoCalendario
 }
 
 defineProps<Props>()

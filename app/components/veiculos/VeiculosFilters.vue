@@ -1,16 +1,35 @@
 <template>
   <div class="veiculos-filters">
     <div class="filter-group">
-      <label class="filter-label">Tipo de Veículo</label>
+      <label class="filter-label" for="veiculos-filtro-tipo">Tipo de Veículo</label>
       <div class="filter-select-wrapper">
-        <input type="text" class="filter-select" placeholder="Todos os tipos" readonly />
+        <select
+          id="veiculos-filtro-tipo"
+          class="filter-select"
+          :value="tipo"
+          @change="$emit('update:tipo', ($event.target as HTMLSelectElement).value)"
+        >
+          <option value="">Todos os tipos</option>
+          <option v-for="item in tipos" :key="item.id" :value="item.id">
+            {{ item.descricao }}
+          </option>
+        </select>
         <ChevronDownIcon class="filter-icon" aria-hidden="true" />
       </div>
     </div>
     <div class="filter-group">
-      <label class="filter-label">Situação</label>
+      <label class="filter-label" for="veiculos-filtro-situacao">Situação</label>
       <div class="filter-select-wrapper">
-        <input type="text" class="filter-select" placeholder="Todos" readonly />
+        <select
+          id="veiculos-filtro-situacao"
+          class="filter-select"
+          :value="situacao"
+          @change="$emit('update:situacao', ($event.target as HTMLSelectElement).value as VeiculoSituacaoFiltro)"
+        >
+          <option v-for="item in situacoes" :key="item.value" :value="item.value">
+            {{ item.label }}
+          </option>
+        </select>
         <ChevronDownIcon class="filter-icon" aria-hidden="true" />
       </div>
     </div>
@@ -19,6 +38,22 @@
 
 <script setup lang="ts">
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
+import { SITUACOES_VEICULO, type TipoVeiculo, type VeiculoSituacaoFiltro } from '@/utils/veiculos'
+
+interface Props {
+  tipo: string
+  situacao: VeiculoSituacaoFiltro
+  tipos: TipoVeiculo[]
+}
+
+defineProps<Props>()
+
+defineEmits<{
+  'update:tipo': [value: string]
+  'update:situacao': [value: VeiculoSituacaoFiltro]
+}>()
+
+const situacoes = SITUACOES_VEICULO
 </script>
 
 <style scoped>

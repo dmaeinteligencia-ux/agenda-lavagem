@@ -2,28 +2,28 @@
   <div class="veiculos-summary">
     <AgendaSummaryCard
       title="Total de Veículos"
-      :value="summary.total"
+      :value="String(summary.total)"
       description="Na frota"
       :icon="TruckIcon"
       variant="blue"
     />
     <AgendaSummaryCard
       title="Ativos"
-      :value="summary.ativos"
+      :value="String(summary.ativos)"
       description="Disponíveis"
       :icon="CheckCircleIcon"
       variant="green"
     />
     <AgendaSummaryCard
       title="Inativos"
-      :value="summary.inativos"
+      :value="String(summary.inativos)"
       description="Fora de serviço"
       :icon="XMarkIcon"
       variant="red"
     />
     <AgendaSummaryCard
       title="Tipos de Veículo"
-      :value="summary.tipos"
+      :value="String(summary.tipos)"
       description="Categorias"
       :icon="CubeIcon"
       variant="amber"
@@ -36,10 +36,10 @@ import AgendaSummaryCard from '@/components/agenda/AgendaSummaryCard.vue'
 import { TruckIcon, CheckCircleIcon, XMarkIcon, CubeIcon } from '@heroicons/vue/24/outline'
 
 interface VeiculosSummaryData {
-  total: string
-  ativos: string
-  inativos: string
-  tipos: string
+  total: number
+  ativos: number
+  inativos: number
+  tipos: number
 }
 
 interface Props {

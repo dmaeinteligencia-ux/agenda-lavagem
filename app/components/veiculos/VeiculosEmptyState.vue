@@ -1,13 +1,23 @@
 <template>
   <div class="veiculos-empty-state">
     <TruckIcon class="veiculos-empty-state-icon" aria-hidden="true" />
-    <h3 class="veiculos-empty-state-title">Não há veículos cadastrados</h3>
-    <p class="veiculos-empty-state-desc">Os veículos cadastrados na frota aparecerão aqui.</p>
+    <h3 class="veiculos-empty-state-title">{{ title }}</h3>
+    <p class="veiculos-empty-state-desc">{{ description }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { TruckIcon } from '@heroicons/vue/24/outline'
+
+interface Props {
+  title?: string
+  description?: string
+}
+
+withDefaults(defineProps<Props>(), {
+  title: 'Não há veículos cadastrados',
+  description: 'Os veículos cadastrados na frota aparecerão aqui.'
+})
 </script>
 
 <style scoped>
