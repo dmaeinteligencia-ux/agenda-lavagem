@@ -1,3 +1,5 @@
+import { ehPerfilValido, rotaInicialPorPerfil, type Perfil } from '@/utils/accessControl'
+
 interface LoginCredentials {
   email: string
   password: string
@@ -60,12 +62,23 @@ const mapAuthError = (err: { message?: string } | null): string => {
   return 'Não foi possível concluir a operação. Tente novamente.'
 }
 
+const getUserId = (u: unknown): string | undefined => {
+  if (!u || typeof u !== 'object') {
+    return undefined
+  }
+  const obj = u as { sub?: string; id?: string }
+  return obj.sub ?? obj.id
+}
+
 export const useAuth = () => {
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()
 
   const isLoading = ref(false)
   const error = ref<string | null>(null)
+  const acessoStatus = useState<StatusLogin | null>('acesso-status', () => null)
+  const acessoUserId = useState<string | null>('acesso-user-id', () => null)
+  const acessoPerfil = useState<Perfil | null>('acesso-perfil', () => null)
 
   const fetchMyProfile = async (
     userId?: string
@@ -73,7 +86,7 @@ export const useAuth = () => {
     profile: PerfilUsuario | null
     error: AuthError | null
   }> => {
-    const currentUserId = userId ?? user.value?.sub
+    const currentUserId = userId ?? getUserId(user.value)
 
     if (!currentUserId) {
       return {
@@ -92,6 +105,53 @@ export const useAuth = () => {
       profile: (data as PerfilUsuario | null) ?? null,
       error: profileError
     }
+  }
+
+  const resolverAcesso = async (): Promise<StatusLogin> => {
+    const currentUserId = getUserId(user.value)
+
+    if (!currentUserId) {
+      acessoStatus.value = 'SEM_PERFIL'
+      acessoPerfil.value = null
+      acessoUserId.value = null
+      return 'SEM_PERFIL'
+    }
+
+    if (acessoUserId.value !== currentUserId) {
+      acessoStatus.value = null
+      acessoPerfil.value = null
+      acessoUserId.value = null
+    }
+
+    if (acessoStatus.value) {
+      return acessoStatus.value
+    }
+
+    const { profile, error: profileError } = await fetchMyProfile(currentUserId)
+
+    if (profileError || !profile) {
+      acessoStatus.value = 'SEM_PERFIL'
+      acessoPerfil.value = null
+    } else {
+      const perfilValido = ehPerfilValido(profile.perfil) ? profile.perfil : null
+
+      if (profile.status_acesso === 'ATIVO' && perfilValido) {
+        acessoStatus.value = 'ATIVO'
+        acessoPerfil.value = perfilValido
+      } else if (
+        profile.status_acesso === 'PENDENTE' ||
+        profile.status_acesso === 'BLOQUEADO'
+      ) {
+        acessoStatus.value = profile.status_acesso
+        acessoPerfil.value = null
+      } else {
+        acessoStatus.value = 'SEM_PERFIL'
+        acessoPerfil.value = null
+      }
+    }
+
+    acessoUserId.value = currentUserId
+    return acessoStatus.value
   }
 
   const signIn = async ({ email, password }: LoginCredentials): Promise<SignInResult> => {
@@ -142,7 +202,15 @@ export const useAuth = () => {
         return { success: false, status: 'BLOQUEADO', message: null }
       }
 
-      await navigateTo('/')
+      if (profile.status_acesso !== 'ATIVO' || !ehPerfilValido(profile.perfil)) {
+        await supabase.auth.signOut()
+        return { success: false, status: 'SEM_PERFIL', message: null }
+      }
+
+      acessoStatus.value = 'ATIVO'
+      acessoPerfil.value = profile.perfil
+      acessoUserId.value = getUserId(data?.user) ?? null
+      await navigateTo(rotaInicialPorPerfil(profile.perfil))
       return { success: true, status: 'ATIVO', message: null }
     } catch (err) {
       const e = err as AuthError
@@ -199,6 +267,9 @@ export const useAuth = () => {
         error.value = message
         return { success: false, message }
       }
+      acessoStatus.value = null
+      acessoUserId.value = null
+      acessoPerfil.value = null
       return { success: true, message: null }
     } catch (err) {
       const e = err as AuthError
@@ -214,6 +285,10 @@ export const useAuth = () => {
     user,
     isLoading: readonly(isLoading),
     error: readonly(error),
+    acessoStatus,
+    acessoUserId,
+    acessoPerfil,
+    resolverAcesso,
     signIn,
     signUp,
     signOut,

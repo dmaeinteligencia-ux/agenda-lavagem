@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed } from 'vue'
 import type { Component } from 'vue'
 import {
   HomeIcon,
@@ -85,12 +85,11 @@ import {
   UsersIcon,
   ArrowRightOnRectangleIcon
 } from '@heroicons/vue/24/outline'
+import { podeAcessarRota } from '@/utils/accessControl'
 
 const { isOpen, close } = useSidebar()
-const { fetchMyProfile, signOut } = useAuth()
-const user = useSupabaseUser()
+const { acessoPerfil, signOut } = useAuth()
 
-const isAdmin = ref(false)
 const loggingOut = ref(false)
 const logoutError = ref<string | null>(null)
 
@@ -116,32 +115,32 @@ const mainNavItems: SidebarLink[] = [
 const configNavItems: SidebarLink[] = [
   { label: 'Tipos de Veículo', icon: TruckIcon, route: '/tipos-veiculo' },
   { label: 'Jornada do Lavador', icon: CalendarDaysIcon, route: '/jornada-lavador' },
-  { label: 'Calendário Operacional', icon: CalendarIcon, route: '/calendario-operacional' }
+  { label: 'Calendário Operacional', icon: CalendarIcon, route: '/calendario-operacional' },
+  { label: 'Usuários', icon: UsersIcon, route: '/usuarios' }
 ]
 
 const sidebarEntries = computed<SidebarEntry[]>(() => {
+  const perfil = acessoPerfil.value
+
   const entries: SidebarEntry[] = [
     ...mainNavItems.map((item) => ({ type: 'link' as const, ...item })),
     { type: 'section', label: 'Configurações' },
     ...configNavItems.map((item) => ({ type: 'link' as const, ...item }))
   ]
 
-  if (isAdmin.value) {
-    entries.push({ type: 'link', label: 'Usuários', icon: UsersIcon, route: '/usuarios' })
-  }
+  const permitidos = entries.filter(
+    (entry) => entry.type === 'section' || podeAcessarRota(perfil, entry.route)
+  )
 
-  return entries
+  return permitidos.filter((entry, index) => {
+    if (entry.type !== 'section') {
+      return true
+    }
+
+    const proximo = permitidos[index + 1]
+    return !!proximo && proximo.type === 'link'
+  })
 })
-
-const carregarPerfil = async () => {
-  if (!user.value) {
-    isAdmin.value = false
-    return
-  }
-
-  const { profile } = await fetchMyProfile()
-  isAdmin.value = profile?.perfil === 'ADMIN' && profile?.status_acesso === 'ATIVO'
-}
 
 const handleLogout = async () => {
   if (loggingOut.value) {
@@ -161,9 +160,6 @@ const handleLogout = async () => {
 
   await navigateTo('/login')
 }
-
-onMounted(carregarPerfil)
-watch(user, carregarPerfil)
 </script>
 
 <style scoped>

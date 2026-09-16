@@ -50,7 +50,8 @@ import { computed } from 'vue'
 import AgendaTimeSlot from './AgendaTimeSlot.vue'
 import AgendaReservationBlock from './AgendaReservationBlock.vue'
 import AgendaAvailableSlot from './AgendaAvailableSlot.vue'
-import type { AcaoChave, AgendaReservaItem, Perfil } from '@/utils/reservas'
+import type { AcaoChave, AgendaReservaItem } from '@/utils/reservas'
+import type { Perfil } from '@/utils/accessControl'
 
 interface Props {
   items: AgendaReservaItem[]

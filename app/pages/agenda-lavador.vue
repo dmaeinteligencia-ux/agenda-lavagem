@@ -81,9 +81,9 @@ import {
   motivosNaoConclusao,
   type AcaoChave,
   type AgendaReservaItem,
-  type MotivoOpcao,
-  type Perfil
+  type MotivoOpcao
 } from '@/utils/reservas'
+import type { Perfil } from '@/utils/accessControl'
 
 definePageMeta({
   layout: 'default'

@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ExclamationCircleIcon } from '@heroicons/vue/24/outline'
 import LoginInstitutionalLogos from './LoginInstitutionalLogos.vue'
 import LoginHeading from './LoginHeading.vue'
@@ -92,6 +92,15 @@ const email = ref('')
 const password = ref('')
 const localError = ref<string | null>(null)
 const signupError = ref<string | null>(null)
+
+const route = useRoute()
+
+onMounted(() => {
+  const motivo = route.query.motivo
+  if (motivo === 'PENDENTE' || motivo === 'BLOQUEADO' || motivo === 'SEM_PERFIL') {
+    notice.value = motivo
+  }
+})
 
 const errorMessage = computed(() => localError.value)
 

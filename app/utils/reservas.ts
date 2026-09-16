@@ -1,3 +1,5 @@
+import type { Perfil } from '@/utils/accessControl'
+
 export type ReservaStatus =
   | 'RESERVADA'
   | 'EM_LAVAGEM'
@@ -122,8 +124,6 @@ export function mapReservaToAgendaItem(
     fimLavagem: formatarHora(horarios?.fimRaw ?? null)
   }
 }
-
-export type Perfil = 'ADMIN' | 'GESTAO_FROTA' | 'LAVADOR'
 
 export type AcaoChave =
   | 'iniciar'

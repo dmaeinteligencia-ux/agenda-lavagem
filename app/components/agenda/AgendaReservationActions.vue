@@ -21,9 +21,9 @@ import {
   acoesParaReserva,
   type AcaoChave,
   type AcaoReserva,
-  type Perfil,
   type ReservaStatus
 } from '@/utils/reservas'
+import type { Perfil } from '@/utils/accessControl'
 
 interface Props {
   status: ReservaStatus

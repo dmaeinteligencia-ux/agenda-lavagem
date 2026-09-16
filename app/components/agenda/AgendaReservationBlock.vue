@@ -31,7 +31,8 @@
 import { computed } from 'vue'
 import AgendaStatusBadge from './AgendaStatusBadge.vue'
 import AgendaReservationActions from './AgendaReservationActions.vue'
-import type { Perfil, ReservaStatus } from '@/utils/reservas'
+import type { ReservaStatus } from '@/utils/reservas'
+import type { Perfil } from '@/utils/accessControl'
 
 interface Props {
   vehicle: string
