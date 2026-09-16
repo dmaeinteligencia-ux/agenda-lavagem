@@ -4,27 +4,48 @@
     <div class="agenda-day-details-body">
       <div class="agenda-day-details-row">
         <span class="agenda-day-details-label">Regime</span>
-        <span class="agenda-day-details-value agenda-day-details-badge">PLANTÃO</span>
+        <span class="agenda-day-details-value agenda-day-details-badge">{{ regimeExibido }}</span>
       </div>
       <div class="agenda-day-details-row">
         <span class="agenda-day-details-label">Capacidade</span>
-        <span class="agenda-day-details-value">480 min</span>
+        <span class="agenda-day-details-value">{{ capacidade }} min</span>
       </div>
       <div class="agenda-day-details-row">
         <span class="agenda-day-details-label">Utilizado</span>
-        <span class="agenda-day-details-value">312 min</span>
+        <span class="agenda-day-details-value">{{ utilizado }} min</span>
       </div>
       <div class="agenda-day-details-row">
         <span class="agenda-day-details-label">Disponível</span>
-        <span class="agenda-day-details-value agenda-day-details-value--accent">168 min</span>
+        <span class="agenda-day-details-value agenda-day-details-value--accent">{{ disponivel }} min</span>
       </div>
       <div class="agenda-day-details-row">
         <span class="agenda-day-details-label">Reservas</span>
-        <span class="agenda-day-details-value">4</span>
+        <span class="agenda-day-details-value">{{ reservas }}</span>
       </div>
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+
+interface Props {
+  regime: string | null
+  capacidade: number
+  utilizado: number
+  disponivel: number
+  reservas: number
+}
+
+const props = defineProps<Props>()
+
+const regimeExibido = computed(() => {
+  if (!props.regime) {
+    return '—'
+  }
+  return props.regime === 'PLANTAO' ? 'PLANTÃO' : props.regime
+})
+</script>
 
 <style scoped>
 .agenda-day-details {

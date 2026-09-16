@@ -8,9 +8,10 @@
       <input
         id="nova-reserva-date"
         class="nova-reserva-date-field-input"
-        type="text"
-        :value="value"
-        readonly
+        type="date"
+        :value="modelValue"
+        :min="min"
+        @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       />
     </div>
   </div>
@@ -21,10 +22,17 @@ import { CalendarDaysIcon } from '@heroicons/vue/24/outline'
 
 interface Props {
   label: string
-  value: string
+  modelValue: string
+  min?: string
 }
 
-defineProps<Props>()
+withDefaults(defineProps<Props>(), {
+  min: undefined
+})
+
+defineEmits<{
+  'update:modelValue': [value: string]
+}>()
 </script>
 
 <style scoped>
@@ -66,8 +74,8 @@ defineProps<Props>()
   border-radius: 8px;
   outline: none;
   box-sizing: border-box;
-  cursor: default;
   transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
 }
 
 .nova-reserva-date-field-input:focus {

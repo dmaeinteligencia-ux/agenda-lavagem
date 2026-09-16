@@ -2,12 +2,17 @@
   <section class="nova-reserva-card" aria-labelledby="nova-reserva-date-title">
     <header class="nova-reserva-card-header">
       <h2 id="nova-reserva-date-title" class="nova-reserva-card-title">
-        <span class="nova-reserva-card-step" aria-hidden="true">2</span>
+        <span class="nova-reserva-card-step" aria-hidden="true">3</span>
         Data da lavagem
       </h2>
     </header>
     <div class="nova-reserva-date-card-body">
-      <NovaReservaDateField label="Data da lavagem" :value="date" />
+      <NovaReservaDateField
+        label="Data da lavagem"
+        :model-value="date"
+        :min="minDate"
+        @update:model-value="$emit('update:date', $event)"
+      />
       <div class="nova-reserva-date-regime">
         <span class="nova-reserva-date-regime-label">Regime operacional</span>
         <span class="nova-reserva-regime-badge">{{ regime }}</span>
@@ -23,9 +28,14 @@ import NovaReservaDateField from './NovaReservaDateField.vue'
 interface Props {
   date: string
   regime: string
+  minDate: string
 }
 
 defineProps<Props>()
+
+defineEmits<{
+  'update:date': [value: string]
+}>()
 </script>
 
 <style scoped>

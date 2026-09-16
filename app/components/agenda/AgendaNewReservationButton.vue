@@ -1,8 +1,8 @@
 <template>
-  <button type="button" class="agenda-new-reservation-btn">
+  <NuxtLink to="/nova-reserva" class="agenda-new-reservation-btn">
     <PlusIcon aria-hidden="true" />
     Nova Reserva
-  </button>
+  </NuxtLink>
 </template>
 
 <script setup lang="ts">
@@ -23,10 +23,11 @@ import { PlusIcon } from '@heroicons/vue/24/outline'
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
+  text-decoration: none;
   transition: background-color 0.2s, box-shadow 0.2s, transform 0.1s;
 }
 
-.agenda-new-reservation-btn:hover:not(:disabled) {
+.agenda-new-reservation-btn:hover {
   background-color: #003570;
 }
 
@@ -35,14 +36,8 @@ import { PlusIcon } from '@heroicons/vue/24/outline'
   box-shadow: 0 0 0 3px rgba(0, 71, 144, 0.3);
 }
 
-.agenda-new-reservation-btn:active:not(:disabled) {
+.agenda-new-reservation-btn:active {
   transform: translateY(1px);
-}
-
-.agenda-new-reservation-btn:disabled {
-  background-color: #9ca3af;
-  cursor: not-allowed;
-  opacity: 0.7;
 }
 
 .agenda-new-reservation-btn svg {

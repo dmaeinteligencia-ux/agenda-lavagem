@@ -16,13 +16,17 @@
         <dt>Tipo</dt>
         <dd>{{ vehicle.type }}</dd>
       </div>
+      <div class="nova-reserva-vehicle-info-item">
+        <dt>Modelo</dt>
+        <dd>{{ vehicle.model }}</dd>
+      </div>
     </dl>
   </div>
 </template>
 
 <script setup lang="ts">
 import { TruckIcon } from '@heroicons/vue/24/outline'
-import type { NovaReservaVehicle } from '@/utils/novaReservaDemo'
+import type { NovaReservaVehicle } from '@/utils/reservas'
 
 interface Props {
   vehicle: NovaReservaVehicle

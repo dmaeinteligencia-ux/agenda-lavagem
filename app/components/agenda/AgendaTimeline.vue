@@ -2,64 +2,76 @@
   <div class="agenda-timeline">
     <div class="agenda-timeline-header">
       <h3 class="agenda-timeline-title">Agenda do Dia</h3>
-      <span class="agenda-timeline-regime">PLANTÃO</span>
+      <span class="agenda-timeline-regime">{{ regimeExibido }}</span>
     </div>
     <div class="agenda-timeline-body">
-      <div
-        v-for="slot in timeline"
-        :key="slot.time"
-        class="agenda-timeline-row"
-      >
-        <AgendaTimeSlot :time="slot.time" />
-        <div class="agenda-timeline-content">
-          <template v-if="slot.type === 'reservation'">
+      <p v-if="items.length === 0" class="agenda-timeline-empty-text">
+        Não há reservas para esta data.
+      </p>
+
+      <template v-else>
+        <div
+          v-for="item in items"
+          :key="item.id"
+          class="agenda-timeline-row"
+        >
+          <AgendaTimeSlot :time="item.inicioLavagem || '—'" />
+          <div class="agenda-timeline-content">
             <AgendaReservationBlock
-              :vehicle="slot.reservation.vehicle"
-              :plate="slot.reservation.plate"
-              :type="slot.reservation.type"
-              :start="slot.reservation.start"
-              :end="slot.reservation.end"
-              :status="slot.reservation.status"
+              :vehicle="item.vehicle"
+              :plate="item.plate"
+              :type="item.type"
+              :status="item.status"
+              :duration="item.duration"
+              :solicitante="item.solicitante"
+              :inicio-lavagem="item.inicioLavagem"
+              :fim-lavagem="item.fimLavagem"
+              :perfil="perfil"
+              :tem-acesso="temAcesso"
+              :loading="actionLoadingId === item.id"
+              @acao="$emit('acao', $event, item)"
             />
-          </template>
-          <template v-else-if="slot.type === 'available'">
-            <AgendaAvailableSlot :time="slot.time" />
-          </template>
-          <template v-else>
-            <div class="agenda-timeline-empty"></div>
-          </template>
+          </div>
         </div>
-      </div>
+
+        <div v-if="disponivelMinutos !== null" class="agenda-timeline-row">
+          <AgendaTimeSlot time="—" />
+          <div class="agenda-timeline-content">
+            <AgendaAvailableSlot :label="`${disponivelMinutos} min disponíveis`" />
+          </div>
+        </div>
+      </template>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import AgendaTimeSlot from './AgendaTimeSlot.vue'
 import AgendaReservationBlock from './AgendaReservationBlock.vue'
 import AgendaAvailableSlot from './AgendaAvailableSlot.vue'
+import type { AcaoChave, AgendaReservaItem, Perfil } from '@/utils/reservas'
 
-const reservations = [
-  { vehicle: 'A11-1234', plate: 'ABC-1A23', type: 'Caminhão', start: '08:00', end: '09:30', status: 'RESERVADA' },
-  { vehicle: 'B07-5678', plate: 'DEF-4B56', type: 'Carro', start: '09:30', end: '10:15', status: 'EM_LAVAGEM' },
-  { vehicle: 'C02-9101', plate: 'GHI-7C89', type: 'Ônibus', start: '10:30', end: '12:30', status: 'RESERVADA' }
-]
+interface Props {
+  items: AgendaReservaItem[]
+  regime: string | null
+  disponivelMinutos: number | null
+  perfil: Perfil | null
+  temAcesso: boolean
+  actionLoadingId: string | null
+}
 
-const times = ['08:00', '09:00', '09:30', '10:15', '10:30', '12:30', '13:00']
+const props = defineProps<Props>()
 
-const timeline = times.map((time, idx) => {
-  const reservation = reservations.find(r => r.start === time)
-  if (reservation) {
-    return { time, type: 'reservation' as const, reservation }
+defineEmits<{
+  acao: [chave: AcaoChave, item: AgendaReservaItem]
+}>()
+
+const regimeExibido = computed(() => {
+  if (!props.regime) {
+    return '—'
   }
-  const nextRes = reservations.find(r => r.start > time)
-  const prevRes = reservations.find(r => r.end <= time)
-  const isAvailableGap = !reservation && prevRes && nextRes
-  return {
-    time,
-    type: (isAvailableGap ? 'available' : 'empty') as 'available' | 'empty',
-    reservation: null
-  }
+  return props.regime === 'PLANTAO' ? 'PLANTÃO' : props.regime
 })
 </script>
 
@@ -101,6 +113,14 @@ const timeline = times.map((time, idx) => {
   display: flex;
   flex-direction: column;
   position: relative;
+}
+
+.agenda-timeline-empty-text {
+  margin: 0;
+  padding: 24px 16px;
+  color: #6b7280;
+  font-size: 14px;
+  text-align: center;
 }
 
 .agenda-timeline-row {

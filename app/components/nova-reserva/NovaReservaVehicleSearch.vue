@@ -13,11 +13,13 @@
           type="text"
           placeholder="Digite a placa do veículo"
           autocomplete="off"
+          @keyup.enter="buscar"
         />
       </div>
     </div>
-    <button type="button" class="nova-reserva-vehicle-search-btn">
-      Pesquisar
+    <button type="button" class="nova-reserva-vehicle-search-btn" :disabled="loading" @click="buscar">
+      <span v-if="loading" class="nova-reserva-vehicle-search-spinner" aria-hidden="true" />
+      <span>{{ loading ? 'Buscando...' : 'Pesquisar' }}</span>
     </button>
   </div>
 </template>
@@ -26,7 +28,26 @@
 import { ref } from 'vue'
 import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
 
+interface Props {
+  loading: boolean
+}
+
+withDefaults(defineProps<Props>(), {
+  loading: false
+})
+
+const emit = defineEmits<{
+  buscar: [placa: string]
+}>()
+
 const plate = ref('')
+
+const buscar = () => {
+  if (!plate.value.trim()) {
+    return
+  }
+  emit('buscar', plate.value.trim())
+}
 </script>
 
 <style scoped>
@@ -99,15 +120,33 @@ const plate = ref('')
   cursor: pointer;
   font-family: inherit;
   transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.nova-reserva-vehicle-search-btn:hover {
+.nova-reserva-vehicle-search-btn:hover:not(:disabled) {
   background: #e8f0fe;
 }
 
-.nova-reserva-vehicle-search-btn:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 71, 144, 0.3);
+.nova-reserva-vehicle-search-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.nova-reserva-vehicle-search-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #dbeafe;
+  border-top-color: #004790;
+  border-radius: 50%;
+  animation: vehicle-spin 0.6s linear infinite;
+}
+
+@keyframes vehicle-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 600px) {

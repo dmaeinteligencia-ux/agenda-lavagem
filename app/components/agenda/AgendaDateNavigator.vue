@@ -1,18 +1,34 @@
 <template>
   <div class="agenda-date-navigator">
-    <button class="nav-btn" aria-label="Data anterior">
+    <button class="nav-btn" aria-label="Data anterior" @click="$emit('prev')">
       <ChevronLeftIcon aria-hidden="true" />
     </button>
-    <span class="nav-date">28 de agosto de 2026</span>
-    <button class="nav-btn" aria-label="Data seguinte">
+    <span class="nav-date">{{ rotulo }}</span>
+    <button class="nav-btn" aria-label="Data seguinte" @click="$emit('next')">
       <ChevronRightIcon aria-hidden="true" />
     </button>
-    <button class="nav-btn nav-btn--hoje">Hoje</button>
+    <button class="nav-btn nav-btn--hoje" @click="$emit('today')">Hoje</button>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
+import { formatarDataExtensa } from '@/utils/reservas'
+
+interface Props {
+  date: string
+}
+
+const props = defineProps<Props>()
+
+defineEmits<{
+  prev: []
+  next: []
+  today: []
+}>()
+
+const rotulo = computed(() => formatarDataExtensa(props.date))
 </script>
 
 <style scoped>

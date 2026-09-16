@@ -2,35 +2,56 @@
   <div class="agenda-filters">
     <div class="filter-group">
       <label class="filter-label">Tipo</label>
-      <select class="filter-select">
-        <option>Todos</option>
-        <option>Caminhão</option>
-        <option>Carro</option>
-        <option>Ônibus</option>
-        <option>Moto</option>
+      <select class="filter-select" :value="tipo" @change="$emit('update:tipo', ($event.target as HTMLSelectElement).value)">
+        <option value="">Todos</option>
+        <option v-for="t in tipos" :key="t" :value="t">{{ t }}</option>
       </select>
     </div>
     <div class="filter-group">
       <label class="filter-label">Status</label>
-      <select class="filter-select">
-        <option>Todos</option>
-        <option>RESERVADA</option>
-        <option>EM_LAVAGEM</option>
-        <option>CONCLUIDA</option>
-        <option>CANCELADA</option>
-        <option>EXPIRADA</option>
+      <select class="filter-select" :value="status" @change="$emit('update:status', ($event.target as HTMLSelectElement).value)">
+        <option value="">Todos</option>
+        <option v-for="s in statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
       </select>
     </div>
     <div class="filter-group">
       <label class="filter-label">Regime</label>
-      <select class="filter-select">
-        <option>Todos</option>
-        <option>NORMAL</option>
-        <option>PLANTAO</option>
+      <select class="filter-select" :value="regime" @change="$emit('update:regime', ($event.target as HTMLSelectElement).value)">
+        <option value="">Todos</option>
+        <option value="NORMAL">Normal</option>
+        <option value="PLANTAO">Plantão</option>
       </select>
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+interface Props {
+  tipos: string[]
+  tipo: string
+  status: string
+  regime: string
+}
+
+defineProps<Props>()
+
+defineEmits<{
+  'update:tipo': [value: string]
+  'update:status': [value: string]
+  'update:regime': [value: string]
+}>()
+
+const statuses = [
+  { value: 'RESERVADA', label: 'Reservada' },
+  { value: 'EM_LAVAGEM', label: 'Em lavagem' },
+  { value: 'CONCLUIDA', label: 'Concluída' },
+  { value: 'CANCELADA', label: 'Cancelada' },
+  { value: 'EXPIRADA', label: 'Expirada' },
+  { value: 'NAO_COMPARECEU', label: 'Não compareceu' },
+  { value: 'NAO_ATENDIDA', label: 'Não atendida' },
+  { value: 'NAO_CONCLUIDA', label: 'Não concluída' }
+]
+</script>
 
 <style scoped>
 .agenda-filters {

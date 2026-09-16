@@ -8,11 +8,21 @@
       <div class="agenda-reservation-block-info">
         <span class="agenda-reservation-block-placa">{{ plate }}</span>
         <span class="agenda-reservation-block-type">{{ type }}</span>
+        <span class="agenda-reservation-block-solicitante">{{ solicitante }}</span>
       </div>
       <div class="agenda-reservation-block-time">
-        <span>{{ start }} — {{ end }}</span>
-        <span class="agenda-reservation-block-duration">{{ duration }}</span>
+        <span>{{ horarioTexto || '—' }}</span>
+        <span class="agenda-reservation-block-duration">{{ duration }} min</span>
       </div>
+
+      <AgendaReservationActions
+        v-if="temAcesso && perfil"
+        :status="status"
+        :perfil="perfil"
+        :tem-acesso="temAcesso"
+        :loading="loading"
+        @acao="$emit('acao', $event)"
+      />
     </div>
   </div>
 </template>
@@ -20,25 +30,43 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import AgendaStatusBadge from './AgendaStatusBadge.vue'
+import AgendaReservationActions from './AgendaReservationActions.vue'
+import type { Perfil, ReservaStatus } from '@/utils/reservas'
 
 interface Props {
   vehicle: string
   plate: string
   type: string
-  start: string
-  end: string
-  status: string
-  duration?: string
+  status: ReservaStatus
+  duration: number
+  solicitante: string
+  inicioLavagem: string | null
+  fimLavagem: string | null
+  perfil: Perfil | null
+  temAcesso: boolean
+  loading: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  duration: '30 min'
-})
+const props = defineProps<Props>()
+
+defineEmits<{
+  acao: [chave: string]
+}>()
 
 const statusVariant = computed(() => {
   if (props.status === 'EM_LAVAGEM') return 'lavagem'
   if (props.status === 'CONCLUIDA') return 'concluida'
   return 'reservada'
+})
+
+const horarioTexto = computed(() => {
+  if (props.inicioLavagem && props.fimLavagem) {
+    return `${props.inicioLavagem} — ${props.fimLavagem}`
+  }
+  if (props.inicioLavagem) {
+    return `Iniciada às ${props.inicioLavagem}`
+  }
+  return null
 })
 </script>
 
@@ -100,6 +128,11 @@ const statusVariant = computed(() => {
 }
 
 .agenda-reservation-block-type {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.agenda-reservation-block-solicitante {
   font-size: 12px;
   color: #6b7280;
 }

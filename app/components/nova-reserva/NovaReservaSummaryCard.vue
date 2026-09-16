@@ -2,7 +2,7 @@
   <section class="nova-reserva-card" aria-labelledby="nova-reserva-summary-title">
     <header class="nova-reserva-card-header">
       <h2 id="nova-reserva-summary-title" class="nova-reserva-card-title">
-        <span class="nova-reserva-card-step" aria-hidden="true">4</span>
+        <span class="nova-reserva-card-step" aria-hidden="true">5</span>
         Resumo da reserva
       </h2>
     </header>
@@ -45,6 +45,8 @@
           class="nova-reserva-summary-observation-input"
           rows="3"
           placeholder="Digite uma observação, se necessário."
+          :value="observacao"
+          @input="$emit('update:observacao', ($event.target as HTMLTextAreaElement).value)"
         />
       </div>
     </div>
@@ -52,16 +54,21 @@
 </template>
 
 <script setup lang="ts">
-import type { NovaReservaVehicle } from '@/utils/novaReservaDemo'
+import type { NovaReservaVehicle } from '@/utils/reservas'
 
 interface Props {
   vehicle: NovaReservaVehicle
   date: string
   regime: string
   estimatedTime: string
+  observacao: string
 }
 
 defineProps<Props>()
+
+defineEmits<{
+  'update:observacao': [value: string]
+}>()
 </script>
 
 <style scoped>

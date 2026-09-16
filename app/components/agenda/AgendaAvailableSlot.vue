@@ -1,13 +1,12 @@
 <template>
-  <div class="agenda-available-slot" :class="{ 'agenda-available-slot--with-time': time }">
-    <span class="agenda-available-slot-label">Disponível</span>
-    <span v-if="time" class="agenda-available-slot-time">{{ time }}</span>
+  <div class="agenda-available-slot">
+    <span class="agenda-available-slot-label">{{ label }}</span>
   </div>
 </template>
 
 <script setup lang="ts">
 interface Props {
-  time?: string
+  label: string
 }
 
 defineProps<Props>()
@@ -27,14 +26,11 @@ defineProps<Props>()
   font-weight: 500;
 }
 
-.agenda-available-slot--with-time {
-  padding: 10px 14px;
-}
-
-.agenda-available-slot-time {
+.agenda-available-slot-label {
   font-weight: 600;
   color: #0284c7;
   font-size: 12px;
   margin-left: auto;
+  margin-right: auto;
 }
 </style>

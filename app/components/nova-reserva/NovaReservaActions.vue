@@ -1,16 +1,22 @@
 <template>
   <div class="nova-reserva-actions">
-    <button type="button" class="nova-reserva-actions-btn nova-reserva-actions-btn--secondary">
+    <button
+      type="button"
+      class="nova-reserva-actions-btn nova-reserva-actions-btn--secondary"
+      :disabled="loading"
+      @click="$emit('cancelar')"
+    >
       Cancelar
     </button>
     <button
       type="button"
       class="nova-reserva-actions-btn nova-reserva-actions-btn--primary"
-      :class="{ 'nova-reserva-actions-btn--disabled': disabled }"
-      :disabled="disabled"
+      :disabled="disabled || loading"
+      @click="$emit('confirmar')"
     >
-      <CheckCircleIcon class="nova-reserva-actions-btn-icon" aria-hidden="true" />
-      Confirmar Reserva
+      <span v-if="loading" class="nova-reserva-actions-spinner" aria-hidden="true" />
+      <CheckCircleIcon v-else class="nova-reserva-actions-btn-icon" aria-hidden="true" />
+      {{ loading ? 'Criando...' : 'Confirmar Reserva' }}
     </button>
   </div>
 </template>
@@ -18,9 +24,20 @@
 <script setup lang="ts">
 import { CheckCircleIcon } from '@heroicons/vue/24/outline'
 
-withDefaults(defineProps<{ disabled?: boolean }>(), {
-  disabled: false
+interface Props {
+  disabled?: boolean
+  loading?: boolean
+}
+
+withDefaults(defineProps<Props>(), {
+  disabled: false,
+  loading: false
 })
+
+defineEmits<{
+  cancelar: []
+  confirmar: []
+}>()
 </script>
 
 <style scoped>
@@ -51,6 +68,21 @@ withDefaults(defineProps<{ disabled?: boolean }>(), {
   height: 18px;
 }
 
+.nova-reserva-actions-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: nova-reserva-spin 0.6s linear infinite;
+}
+
+@keyframes nova-reserva-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .nova-reserva-actions-btn--primary {
   background-color: #004790;
   color: #fff;
@@ -71,7 +103,6 @@ withDefaults(defineProps<{ disabled?: boolean }>(), {
   transform: translateY(1px);
 }
 
-.nova-reserva-actions-btn--primary.nova-reserva-actions-btn--disabled,
 .nova-reserva-actions-btn--primary:disabled {
   background-color: #9ca3af;
   border-color: #9ca3af;
@@ -92,6 +123,11 @@ withDefaults(defineProps<{ disabled?: boolean }>(), {
 .nova-reserva-actions-btn--secondary:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px rgba(0, 71, 144, 0.25);
+}
+
+.nova-reserva-actions-btn--secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 @media (max-width: 600px) {

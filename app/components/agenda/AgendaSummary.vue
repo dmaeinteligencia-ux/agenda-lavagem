@@ -2,29 +2,29 @@
   <div class="agenda-summary">
     <AgendaSummaryCard
       title="Capacidade"
-      value="480 min"
-      description="8h disponíveis"
+      :value="`${capacidade} min`"
+      description="Jornada do dia"
       :icon="ClockIcon"
       variant="amber"
     />
     <AgendaSummaryCard
       title="Utilizado"
-      value="312 min"
-      description="65% da capacidade"
+      :value="`${utilizado} min`"
+      :description="percentualDescricao"
       :icon="ChartBarIcon"
       variant="red"
     />
     <AgendaSummaryCard
       title="Disponível"
-      value="168 min"
-      description="2h 48min restantes"
+      :value="`${disponivel} min`"
+      description="Restantes"
       :icon="CheckCircleIcon"
       variant="green"
     />
     <AgendaSummaryCard
       title="Reservas"
-      value="4"
-      description="Programadas hoje"
+      :value="String(reservas)"
+      description="Programadas no dia"
       :icon="CalendarDaysIcon"
       variant="blue"
     />
@@ -32,8 +32,26 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { ClockIcon, ChartBarIcon, CheckCircleIcon, CalendarDaysIcon } from '@heroicons/vue/24/outline'
 import AgendaSummaryCard from './AgendaSummaryCard.vue'
+
+interface Props {
+  capacidade: number
+  utilizado: number
+  disponivel: number
+  reservas: number
+}
+
+const props = defineProps<Props>()
+
+const percentualDescricao = computed(() => {
+  if (props.capacidade <= 0) {
+    return '—'
+  }
+  const pct = Math.round((props.utilizado / props.capacidade) * 100)
+  return `${pct}% da capacidade`
+})
 </script>
 
 <style scoped>

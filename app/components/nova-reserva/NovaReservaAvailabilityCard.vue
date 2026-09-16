@@ -2,7 +2,7 @@
   <section class="nova-reserva-card" aria-labelledby="nova-reserva-availability-title">
     <header class="nova-reserva-card-header">
       <h2 id="nova-reserva-availability-title" class="nova-reserva-card-title">
-        <span class="nova-reserva-card-step" aria-hidden="true">3</span>
+        <span class="nova-reserva-card-step" aria-hidden="true">4</span>
         Disponibilidade
       </h2>
     </header>
@@ -57,7 +57,7 @@
 
 <script setup lang="ts">
 import NovaReservaAvailabilityStatus from './NovaReservaAvailabilityStatus.vue'
-import type { NovaReservaCapacity } from '@/utils/novaReservaDemo'
+import type { NovaReservaCapacity } from '@/utils/reservas'
 
 interface Props {
   capacity: NovaReservaCapacity

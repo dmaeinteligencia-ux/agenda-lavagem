@@ -5,7 +5,7 @@
       <p class="agenda-page-header-subtitle">Consulte a programação e a disponibilidade do lavador.</p>
     </div>
     <div class="agenda-page-header-controls">
-      <AgendaDateNavigator />
+      <AgendaDateNavigator :date="date" @prev="$emit('prev')" @next="$emit('next')" @today="$emit('today')" />
       <AgendaViewSelector />
     </div>
   </div>
@@ -14,6 +14,18 @@
 <script setup lang="ts">
 import AgendaDateNavigator from './AgendaDateNavigator.vue'
 import AgendaViewSelector from './AgendaViewSelector.vue'
+
+interface Props {
+  date: string
+}
+
+defineProps<Props>()
+
+defineEmits<{
+  prev: []
+  next: []
+  today: []
+}>()
 </script>
 
 <style scoped>
