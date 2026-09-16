@@ -1,17 +1,29 @@
 <template>
   <div class="jornada-lavador-page">
-    <JornadaLavadorPageHeader @new-jornada="openCreate" />
+    <JornadaLavadorPageHeader />
     <JornadaLavadorSummary :summary="summary" />
+
+    <div v-if="loading" class="jornada-lavador-state">
+      <span class="jornada-lavador-spinner" aria-hidden="true" />
+      <span>Carregando jornadas...</span>
+    </div>
+
+    <div v-else-if="error" class="jornada-lavador-state jornada-lavador-state--erro" role="alert">
+      <p class="jornada-lavador-state-message">{{ error }}</p>
+      <button type="button" class="jornada-lavador-retry" @click="carregar">Tentar novamente</button>
+    </div>
+
     <JornadaLavadorTable
+      v-else
       :jornadas="jornadas"
       @edit="openEdit"
-      @new-jornada="openCreate"
     />
 
     <JornadaLavadorModal
-      v-if="showModal"
-      :mode="modalMode"
+      v-if="showModal && jornadaEdicao"
       :jornada="jornadaEdicao"
+      :loading="salvando"
+      :error="modalError"
       @close="closeModal"
       @save="handleSave"
     />
@@ -19,63 +31,66 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import JornadaLavadorPageHeader from '@/components/jornada-lavador/JornadaLavadorPageHeader.vue'
 import JornadaLavadorSummary from '@/components/jornada-lavador/JornadaLavadorSummary.vue'
 import JornadaLavadorTable from '@/components/jornada-lavador/JornadaLavadorTable.vue'
 import JornadaLavadorModal from '@/components/jornada-lavador/JornadaLavadorModal.vue'
-import { jornadasLavadorMock, jornadaLavadorSummary, diasPorRegime } from '@/utils/jornadaLavadorMock'
-import type { JornadaLavadorMock, JornadaLavadorFormData } from '@/utils/jornadaLavadorMock'
+import { useJornadaLavador } from '@/composables/useJornadaLavador'
+import {
+  resumoJornada,
+  type JornadaLavador,
+  type JornadaLavadorFormData
+} from '@/utils/jornadaLavador'
 
 definePageMeta({
   layout: 'default'
 })
 
-const summary = jornadaLavadorSummary
-const jornadas = ref<JornadaLavadorMock[]>([...jornadasLavadorMock])
+const {
+  jornadas,
+  loading,
+  error,
+  salvandoId,
+  carregar,
+  atualizarJornada
+} = useJornadaLavador()
+
 const showModal = ref(false)
-const modalMode = ref<'create' | 'edit'>('create')
-const jornadaEdicao = ref<JornadaLavadorMock | null>(null)
+const jornadaEdicao = ref<JornadaLavador | null>(null)
+const modalError = ref<string | null>(null)
 
-const openCreate = () => {
-  modalMode.value = 'create'
-  jornadaEdicao.value = null
-  showModal.value = true
-}
+const summary = computed(() => resumoJornada(jornadas.value))
+const salvando = computed(() => salvandoId.value !== null)
 
-const openEdit = (jornada: JornadaLavadorMock) => {
-  modalMode.value = 'edit'
+const openEdit = (jornada: JornadaLavador) => {
   jornadaEdicao.value = { ...jornada }
+  modalError.value = null
   showModal.value = true
 }
 
 const closeModal = () => {
   showModal.value = false
+  modalError.value = null
 }
 
-const handleSave = (data: JornadaLavadorFormData) => {
-  if (modalMode.value === 'edit' && jornadaEdicao.value) {
-    const index = jornadas.value.findIndex((j) => j.id === jornadaEdicao.value?.id)
-    if (index !== -1) {
-      jornadas.value[index] = {
-        ...jornadas.value[index],
-        regime: data.regime,
-        dias: diasPorRegime(data.regime),
-        horas: data.horas,
-        disponivel_agendamento: data.disponivel_agendamento
-      }
-    }
-  } else {
-    jornadas.value.push({
-      id: String(Date.now()),
-      regime: data.regime,
-      dias: diasPorRegime(data.regime),
-      horas: data.horas,
-      disponivel_agendamento: data.disponivel_agendamento
-    })
+const handleSave = async (data: JornadaLavadorFormData) => {
+  if (!jornadaEdicao.value) {
+    return
   }
+
+  modalError.value = null
+  const resultado = await atualizarJornada(jornadaEdicao.value.id, data)
+
+  if (!resultado.success) {
+    modalError.value = resultado.error
+    return
+  }
+
   showModal.value = false
 }
+
+onMounted(carregar)
 </script>
 
 <style scoped>
@@ -88,6 +103,63 @@ const handleSave = (data: JornadaLavadorFormData) => {
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+
+.jornada-lavador-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  padding: 60px 24px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  color: #6b7280;
+  font-size: 14px;
+  text-align: center;
+}
+
+.jornada-lavador-state--erro {
+  color: #4b5563;
+}
+
+.jornada-lavador-state-message {
+  margin: 0;
+}
+
+.jornada-lavador-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #dbeafe;
+  border-top-color: #004790;
+  border-radius: 50%;
+  animation: jornada-lavador-spin 0.8s linear infinite;
+}
+
+@keyframes jornada-lavador-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.jornada-lavador-retry {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #004790;
+  background: #fff;
+  border: 1px solid #004790;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.jornada-lavador-retry:hover {
+  background: #e8f0fe;
 }
 
 @media (max-width: 1024px) {

@@ -4,15 +4,15 @@
       class="jornada-lavador-modal"
       role="dialog"
       aria-modal="true"
-      :aria-labelledby="`jornada-lavador-modal-title-${mode}`"
+      aria-labelledby="jornada-lavador-modal-title"
     >
       <header class="jornada-lavador-modal-header">
         <div class="jornada-lavador-modal-header-text">
-          <h2 :id="`jornada-lavador-modal-title-${mode}`" class="jornada-lavador-modal-title">
-            {{ mode === 'edit' ? 'Editar Jornada' : 'Nova Jornada' }}
+          <h2 id="jornada-lavador-modal-title" class="jornada-lavador-modal-title">
+            Editar jornada
           </h2>
           <p class="jornada-lavador-modal-subtitle">
-            {{ mode === 'edit' ? 'Atualize a configuração da jornada.' : 'Cadastre uma nova jornada e defina a disponibilidade para agendamento.' }}
+            Atualize as horas disponíveis da jornada.
           </p>
         </div>
         <button
@@ -28,15 +28,16 @@
       <div class="jornada-lavador-modal-body">
         <JornadaLavadorForm
           :initial-data="jornada"
-          :mode="mode"
           @update:form-data="formData = $event"
         />
+        <p v-if="error" class="jornada-lavador-modal-error" role="alert">{{ error }}</p>
       </div>
 
       <footer class="jornada-lavador-modal-footer">
         <button
           type="button"
           class="jornada-lavador-modal-btn jornada-lavador-modal-btn--secondary"
+          :disabled="loading"
           @click="$emit('close')"
         >
           Cancelar
@@ -44,9 +45,10 @@
         <button
           type="button"
           class="jornada-lavador-modal-btn jornada-lavador-modal-btn--primary"
+          :disabled="loading"
           @click="onSave"
         >
-          {{ mode === 'edit' ? 'Salvar alterações' : 'Salvar' }}
+          {{ loading ? 'Salvando...' : 'Salvar alterações' }}
         </button>
       </footer>
     </div>
@@ -57,16 +59,18 @@
 import { ref } from 'vue'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
 import JornadaLavadorForm from './JornadaLavadorForm.vue'
-import type { JornadaLavadorMock, JornadaLavadorFormData } from '@/utils/jornadaLavadorMock'
+import type { JornadaLavador, JornadaLavadorFormData } from '@/utils/jornadaLavador'
 
 interface Props {
-  mode?: 'create' | 'edit'
-  jornada?: JornadaLavadorMock | null
+  jornada?: JornadaLavador | null
+  loading?: boolean
+  error?: string | null
 }
 
 withDefaults(defineProps<Props>(), {
-  mode: 'create',
-  jornada: null
+  jornada: null,
+  loading: false,
+  error: null
 })
 
 const emit = defineEmits<{
@@ -76,8 +80,7 @@ const emit = defineEmits<{
 
 const formData = ref<JornadaLavadorFormData>({
   regime: 'NORMAL',
-  horas: 8,
-  disponivel_agendamento: true
+  horas_disponiveis: 8
 })
 
 const onSave = () => {
@@ -172,6 +175,16 @@ const onSave = () => {
   padding: 24px 28px;
   overflow-y: auto;
   flex: 1;
+}
+
+.jornada-lavador-modal-error {
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 13px;
 }
 
 .jornada-lavador-modal-footer {

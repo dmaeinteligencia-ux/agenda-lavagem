@@ -7,7 +7,6 @@
             <th class="jornada-lavador-header-cell">Regime</th>
             <th class="jornada-lavador-header-cell">Dias de aplicação</th>
             <th class="jornada-lavador-header-cell">Horas disponíveis</th>
-            <th class="jornada-lavador-header-cell">Agendamento</th>
             <th class="jornada-lavador-header-cell jornada-lavador-header-cell--acoes">Ações</th>
           </tr>
         </thead>
@@ -23,26 +22,22 @@
     </div>
   </div>
 
-  <JornadaLavadorEmptyState
-    v-if="jornadas.length === 0"
-    @new-jornada="$emit('new-jornada')"
-  />
+  <JornadaLavadorEmptyState v-if="jornadas.length === 0" />
 </template>
 
 <script setup lang="ts">
 import JornadaLavadorTableRow from './JornadaLavadorTableRow.vue'
 import JornadaLavadorEmptyState from './JornadaLavadorEmptyState.vue'
-import type { JornadaLavadorMock } from '@/utils/jornadaLavadorMock'
+import type { JornadaLavador } from '@/utils/jornadaLavador'
 
 interface Props {
-  jornadas: JornadaLavadorMock[]
+  jornadas: JornadaLavador[]
 }
 
 defineProps<Props>()
 
 defineEmits<{
-  edit: [jornada: JornadaLavadorMock]
-  'new-jornada': []
+  edit: [jornada: JornadaLavador]
 }>()
 </script>
 

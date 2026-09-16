@@ -6,6 +6,7 @@
         id="jornada-lavador-regime"
         v-model="formData.regime"
         class="jornada-lavador-form-select"
+        disabled
       >
         <option value="NORMAL">NORMAL</option>
         <option value="PLANTAO">PLANTÃO</option>
@@ -18,37 +19,16 @@
       <div class="jornada-lavador-form-horas-wrapper">
         <input
           id="jornada-lavador-horas"
-          v-model.number="formData.horas"
+          v-model.number="formData.horas_disponiveis"
           type="number"
-          :min="0.5"
-          :step="0.5"
-          :max="maxHoras"
+          :min="1"
+          :step="1"
           class="jornada-lavador-form-input"
         />
         <span class="jornada-lavador-form-unidade">horas</span>
       </div>
-      <p class="jornada-lavador-form-helper">{{ horasHelper }}</p>
-    </div>
-
-    <div class="jornada-lavador-form-field">
-      <div class="jornada-lavador-form-toggle-row">
-        <div class="jornada-lavador-form-toggle-text">
-          <span class="jornada-lavador-form-label jornada-lavador-form-label--inline">Disponível para agendamento</span>
-          <span class="jornada-lavador-form-toggle-state">{{ formData.disponivel_agendamento ? 'Sim' : 'Não' }}</span>
-        </div>
-        <button
-          type="button"
-          role="switch"
-          :aria-checked="formData.disponivel_agendamento"
-          class="jornada-lavador-form-switch"
-          :class="{ 'jornada-lavador-form-switch--on': formData.disponivel_agendamento }"
-          @click="formData.disponivel_agendamento = !formData.disponivel_agendamento"
-        >
-          <span class="jornada-lavador-form-switch-thumb" />
-        </button>
-      </div>
       <p class="jornada-lavador-form-helper">
-        O regime PLANTÃO pode permanecer cadastrado e indisponível para agendamento.
+        Define a capacidade diária (minutos) deste regime na disponibilidade.
       </p>
     </div>
   </div>
@@ -56,16 +36,14 @@
 
 <script setup lang="ts">
 import { reactive, computed, watch } from 'vue'
-import type { JornadaLavadorMock, JornadaLavadorFormData } from '@/utils/jornadaLavadorMock'
+import { diasPorRegime, type JornadaLavador, type JornadaLavadorFormData } from '@/utils/jornadaLavador'
 
 interface Props {
-  initialData?: JornadaLavadorMock | null
-  mode?: 'create' | 'edit'
+  initialData?: JornadaLavador | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  initialData: null,
-  mode: 'create'
+  initialData: null
 })
 
 const emit = defineEmits<{
@@ -74,8 +52,7 @@ const emit = defineEmits<{
 
 const formData = reactive<JornadaLavadorFormData>({
   regime: 'NORMAL',
-  horas: 8,
-  disponivel_agendamento: true
+  horas_disponiveis: 8
 })
 
 watch(
@@ -83,8 +60,7 @@ watch(
   (data) => {
     if (data) {
       formData.regime = data.regime
-      formData.horas = data.horas
-      formData.disponivel_agendamento = data.disponivel_agendamento
+      formData.horas_disponiveis = data.horas_disponiveis
     }
   },
   { immediate: true }
@@ -96,19 +72,7 @@ watch(
   { deep: true }
 )
 
-const maxHoras = computed(() => (formData.regime === 'NORMAL' ? 8 : 24))
-
-const regimeHelper = computed(() =>
-  formData.regime === 'NORMAL'
-    ? 'Aplica-se de segunda a sexta-feira.'
-    : 'Aplica-se aos sábados, domingos e feriados.'
-)
-
-const horasHelper = computed(() =>
-  formData.regime === 'NORMAL'
-    ? 'O regime NORMAL permite até 8 horas por dia.'
-    : 'Informe a jornada em horas para o regime PLANTÃO.'
-)
+const regimeHelper = computed(() => diasPorRegime(formData.regime))
 </script>
 
 <style scoped>
@@ -130,10 +94,6 @@ const horasHelper = computed(() =>
   color: #333;
 }
 
-.jornada-lavador-form-label--inline {
-  display: block;
-}
-
 .jornada-lavador-form-select,
 .jornada-lavador-form-input {
   padding: 10px 12px;
@@ -146,6 +106,12 @@ const horasHelper = computed(() =>
   box-sizing: border-box;
   font-family: inherit;
   transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.jornada-lavador-form-select:disabled {
+  background: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
 }
 
 .jornada-lavador-form-select:focus,
@@ -177,62 +143,5 @@ const horasHelper = computed(() =>
   font-size: 12px;
   color: #9ca3af;
   margin: 0;
-}
-
-.jornada-lavador-form-toggle-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.jornada-lavador-form-toggle-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.jornada-lavador-form-toggle-state {
-  font-size: 13px;
-  font-weight: 600;
-  color: #004790;
-}
-
-.jornada-lavador-form-switch {
-  position: relative;
-  width: 44px;
-  height: 24px;
-  border-radius: 999px;
-  background: #d1d5db;
-  border: none;
-  cursor: pointer;
-  transition: background 0.2s;
-  flex-shrink: 0;
-}
-
-.jornada-lavador-form-switch--on {
-  background: #004790;
-}
-
-.jornada-lavador-form-switch:focus-visible {
-  outline: 2px solid #004790;
-  outline-offset: 2px;
-}
-
-.jornada-lavador-form-switch-thumb {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s;
-}
-
-.jornada-lavador-form-switch--on .jornada-lavador-form-switch-thumb {
-  transform: translateX(20px);
 }
 </style>

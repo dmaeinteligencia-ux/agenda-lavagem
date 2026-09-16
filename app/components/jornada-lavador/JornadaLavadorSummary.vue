@@ -2,52 +2,40 @@
   <div class="jornada-lavador-summary">
     <AgendaSummaryCard
       title="Regimes configurados"
-      :value="summary.regimesConfigurados"
+      :value="String(summary.regimesConfigurados)"
       description="Jornadas operacionais"
       :icon="ClipboardDocumentCheckIcon"
       variant="blue"
     />
     <AgendaSummaryCard
       title="Jornada normal"
-      :value="summary.jornadaNormal"
+      :value="formatarHoras(summary.horasNormal)"
       description="Segunda a sexta-feira"
       :icon="ClockIcon"
       variant="amber"
     />
     <AgendaSummaryCard
-      title="Plantão"
-      :value="plantaoValue"
-      description="para agendamento"
+      title="Jornada plantão"
+      :value="formatarHoras(summary.horasPlantao)"
+      description="Sábados, domingos e feriados"
       :icon="CalendarDaysIcon"
-      :variant="plantaoVariant"
+      variant="amber"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import AgendaSummaryCard from '@/components/agenda/AgendaSummaryCard.vue'
 import { ClipboardDocumentCheckIcon, ClockIcon, CalendarDaysIcon } from '@heroicons/vue/24/outline'
-
-interface JornadaLavadorSummaryData {
-  regimesConfigurados: string
-  jornadaNormal: string
-  plantaoDisponivel: boolean
-}
+import type { ResumoJornada } from '@/utils/jornadaLavador'
 
 interface Props {
-  summary: JornadaLavadorSummaryData
+  summary: ResumoJornada
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
-const plantaoValue = computed(() =>
-  props.summary.plantaoDisponivel ? 'Disponível' : 'Indisponível'
-)
-
-const plantaoVariant = computed(() =>
-  props.summary.plantaoDisponivel ? 'green' : 'red'
-)
+const formatarHoras = (horas: number | null): string => (horas === null ? '—' : `${horas}h`)
 </script>
 
 <style scoped>

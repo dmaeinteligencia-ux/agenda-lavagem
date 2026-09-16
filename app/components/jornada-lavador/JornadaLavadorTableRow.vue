@@ -6,13 +6,10 @@
       </span>
     </td>
     <td class="jornada-lavador-cell" data-label="Dias de aplicação">
-      <span>{{ jornada.dias }}</span>
+      <span>{{ diasPorRegime(jornada.regime) }}</span>
     </td>
     <td class="jornada-lavador-cell" data-label="Horas disponíveis">
-      <span>{{ jornada.horas }}h</span>
-    </td>
-    <td class="jornada-lavador-cell" data-label="Agendamento">
-      <JornadaLavadorStatusBadge :disponivel="jornada.disponivel_agendamento" />
+      <span>{{ jornada.horas_disponiveis }}h</span>
     </td>
     <td class="jornada-lavador-cell jornada-lavador-cell--acoes" data-label="Ações">
       <div class="jornada-lavador-acoes">
@@ -32,11 +29,10 @@
 
 <script setup lang="ts">
 import { PencilSquareIcon } from '@heroicons/vue/24/outline'
-import JornadaLavadorStatusBadge from './JornadaLavadorStatusBadge.vue'
-import type { JornadaLavadorMock } from '@/utils/jornadaLavadorMock'
+import { diasPorRegime, type JornadaLavador } from '@/utils/jornadaLavador'
 
 interface Props {
-  jornada: JornadaLavadorMock
+  jornada: JornadaLavador
 }
 
 defineProps<Props>()
