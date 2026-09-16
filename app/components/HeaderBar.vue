@@ -21,16 +21,36 @@
           <span class="user-role">{{ perfilLabel }}</span>
         </template>
       </div>
+
+      <span v-if="user" class="header-divider" aria-hidden="true" />
+
+      <p v-if="logoutError" class="header-logout-error" role="alert">{{ logoutError }}</p>
+
+      <button
+        v-if="user"
+        type="button"
+        class="header-logout"
+        title="Sair"
+        aria-label="Sair da conta"
+        :aria-busy="loggingOut"
+        :disabled="loggingOut"
+        @click="handleLogout"
+      >
+        <span v-if="loggingOut" class="header-logout-spinner" aria-hidden="true" />
+        <ArrowRightOnRectangleIcon v-else class="header-logout-icon" aria-hidden="true" />
+        <span class="header-logout-label">{{ loggingOut ? 'Saindo...' : 'Sair' }}</span>
+      </button>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { Bars3Icon, XMarkIcon, ArrowRightOnRectangleIcon } from '@heroicons/vue/24/outline'
 
 const { isOpen, toggle } = useSidebar()
 const { fetchMyProfile } = useAuth()
+const { loggingOut, logoutError, handleLogout } = useLogout()
 const user = useSupabaseUser()
 
 const nome = ref<string | null>(null)
@@ -139,7 +159,8 @@ watch(user, carregarPerfil)
 .header-right {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 12px;
+  min-width: 0;
 }
 
 .user-info {
@@ -163,6 +184,85 @@ watch(user, carregarPerfil)
   opacity: 0.8;
 }
 
+.header-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.header-logout-error {
+  margin: 0;
+  max-width: 200px;
+  font-size: 12px;
+  color: #fecaca;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.header-logout:hover:not(:disabled) {
+  background: rgba(254, 226, 226, 0.16);
+  color: #fecaca;
+}
+
+.header-logout:active:not(:disabled) {
+  background: rgba(254, 226, 226, 0.28);
+}
+
+.header-logout:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.header-logout:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.header-logout-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.header-logout-label {
+  line-height: 1;
+}
+
+.header-logout-spinner {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: header-logout-spin 0.7s linear infinite;
+}
+
+@keyframes header-logout-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (max-width: 768px) {
   .header {
     padding: 0 16px;
@@ -175,11 +275,19 @@ watch(user, carregarPerfil)
   .user-info {
     display: none;
   }
+
+  .header-divider {
+    display: none;
+  }
 }
 
 @media (max-width: 480px) {
   .logo {
     height: 32px;
+  }
+
+  .header-logout-label {
+    display: none;
   }
 }
 </style>

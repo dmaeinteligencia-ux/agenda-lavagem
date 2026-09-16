@@ -24,19 +24,6 @@
             </NuxtLink>
           </template>
         </nav>
-        <div class="sidebar-footer">
-          <p v-if="logoutError" class="sidebar-logout-error" role="alert">{{ logoutError }}</p>
-          <button
-            type="button"
-            class="sidebar-logout"
-            :disabled="loggingOut"
-            @click="handleLogout"
-          >
-            <span v-if="loggingOut" class="sidebar-logout-spinner" aria-hidden="true" />
-            <ArrowRightOnRectangleIcon v-else class="sidebar-icon" aria-hidden="true" />
-            <span class="sidebar-label">{{ loggingOut ? 'Saindo...' : 'Sair' }}</span>
-          </button>
-        </div>
       </aside>
     </Transition>
     <aside class="sidebar sidebar--desktop" role="navigation" aria-label="Menu principal">
@@ -54,25 +41,12 @@
           </NuxtLink>
         </template>
       </nav>
-      <div class="sidebar-footer">
-        <p v-if="logoutError" class="sidebar-logout-error" role="alert">{{ logoutError }}</p>
-        <button
-          type="button"
-          class="sidebar-logout"
-          :disabled="loggingOut"
-          @click="handleLogout"
-        >
-          <span v-if="loggingOut" class="sidebar-logout-spinner" aria-hidden="true" />
-          <ArrowRightOnRectangleIcon v-else class="sidebar-icon" aria-hidden="true" />
-          <span class="sidebar-label">{{ loggingOut ? 'Saindo...' : 'Sair' }}</span>
-        </button>
-      </div>
     </aside>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import type { Component } from 'vue'
 import {
   HomeIcon,
@@ -82,16 +56,12 @@ import {
   ChartBarIcon,
   UserGroupIcon,
   CalendarIcon,
-  UsersIcon,
-  ArrowRightOnRectangleIcon
+  UsersIcon
 } from '@heroicons/vue/24/outline'
 import { podeAcessarRota } from '@/utils/accessControl'
 
 const { isOpen, close } = useSidebar()
-const { acessoPerfil, signOut } = useAuth()
-
-const loggingOut = ref(false)
-const logoutError = ref<string | null>(null)
+const { acessoPerfil } = useAuth()
 
 interface SidebarLink {
   label: string
@@ -141,25 +111,6 @@ const sidebarEntries = computed<SidebarEntry[]>(() => {
     return !!proximo && proximo.type === 'link'
   })
 })
-
-const handleLogout = async () => {
-  if (loggingOut.value) {
-    return
-  }
-
-  loggingOut.value = true
-  logoutError.value = null
-
-  const result = await signOut()
-  loggingOut.value = false
-
-  if (!result.success) {
-    logoutError.value = result.message || 'Não foi possível sair.'
-    return
-  }
-
-  await navigateTo('/login')
-}
 </script>
 
 <style scoped>
@@ -251,71 +202,6 @@ const handleLogout = async () => {
 .sidebar-btn:hover .sidebar-icon,
 .sidebar-btn:focus-visible .sidebar-icon {
   color: #004790;
-}
-
-.sidebar-footer {
-  padding: 12px;
-  border-top: 1px solid #d1d5db;
-  flex-shrink: 0;
-}
-
-.sidebar-logout-error {
-  margin: 0 4px 8px;
-  font-size: 12px;
-  color: #991b1b;
-}
-
-.sidebar-logout {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: #374151;
-  text-align: left;
-  padding: 12px 16px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 8px;
-  transition: background 0.2s, color 0.2s;
-  font-family: inherit;
-}
-
-.sidebar-logout:hover:not(:disabled) {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.sidebar-logout:hover:not(:disabled) .sidebar-icon {
-  color: #991b1b;
-}
-
-.sidebar-logout:focus-visible {
-  outline: 2px solid #004790;
-  outline-offset: -2px;
-}
-
-.sidebar-logout:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.sidebar-logout-spinner {
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  border: 2px solid #dbeafe;
-  border-top-color: #004790;
-  border-radius: 50%;
-  animation: sidebar-logout-spin 0.7s linear infinite;
-}
-
-@keyframes sidebar-logout-spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .sidebar-overlay {
