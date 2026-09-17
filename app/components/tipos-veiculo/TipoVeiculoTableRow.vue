@@ -8,11 +8,25 @@
     </td>
     <td class="tipos-veiculo-cell tipos-veiculo-cell--acoes">
       <div class="tipos-veiculo-acoes">
-        <button type="button" class="tipos-veiculo-acao-btn" title="Editar" aria-label="Editar tipo">
+        <button
+          type="button"
+          class="tipos-veiculo-acao-btn"
+          title="Editar"
+          aria-label="Editar tipo"
+          @click="$emit('editar', tipo)"
+        >
           <PencilSquareIcon aria-hidden="true" />
         </button>
-        <button type="button" class="tipos-veiculo-acao-btn" title="Excluir" aria-label="Excluir tipo">
-          <XMarkIcon aria-hidden="true" />
+        <button
+          type="button"
+          class="tipos-veiculo-acao-btn tipos-veiculo-acao-btn--danger"
+          title="Excluir"
+          aria-label="Excluir tipo"
+          :disabled="excluindo"
+          @click="$emit('excluir', tipo)"
+        >
+          <span v-if="excluindo" class="tipos-veiculo-acao-spinner" aria-hidden="true" />
+          <XMarkIcon v-else aria-hidden="true" />
         </button>
       </div>
     </td>
@@ -21,13 +35,19 @@
 
 <script setup lang="ts">
 import { PencilSquareIcon, XMarkIcon } from '@heroicons/vue/24/outline'
-import type { TipoVeiculoMock } from '@/utils/tiposVeiculoMock'
+import type { TipoVeiculo } from '@/utils/tiposVeiculo'
 
 interface Props {
-  tipo: TipoVeiculoMock
+  tipo: TipoVeiculo
+  excluindo: boolean
 }
 
 defineProps<Props>()
+
+defineEmits<{
+  editar: [tipo: TipoVeiculo]
+  excluir: [tipo: TipoVeiculo]
+}>()
 </script>
 
 <style scoped>
@@ -75,9 +95,34 @@ defineProps<Props>()
   transition: background-color 0.15s, color 0.15s;
 }
 
-.tipos-veiculo-acao-btn:hover {
+.tipos-veiculo-acao-btn:hover:not(:disabled) {
   background: #f3f4f6;
   color: #004790;
+}
+
+.tipos-veiculo-acao-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.tipos-veiculo-acao-btn--danger:hover:not(:disabled) {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.tipos-veiculo-acao-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #fecaca;
+  border-top-color: #dc2626;
+  border-radius: 50%;
+  animation: tipos-veiculo-acao-spin 0.7s linear infinite;
+}
+
+@keyframes tipos-veiculo-acao-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .tipos-veiculo-acao-btn:focus-visible {

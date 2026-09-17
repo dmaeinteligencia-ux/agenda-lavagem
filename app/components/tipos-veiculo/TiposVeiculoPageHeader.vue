@@ -4,7 +4,7 @@
       <h1 class="tipos-veiculo-page-header-title">Tipos de Veículo</h1>
       <p class="tipos-veiculo-page-header-subtitle">Configure os tipos de veículos e os respectivos tempos de lavagem.</p>
     </div>
-    <button type="button" class="tipos-veiculo-new-tipo-btn" aria-label="Novo Tipo" disabled>
+    <button type="button" class="tipos-veiculo-new-tipo-btn" aria-label="Novo Tipo" @click="$emit('new-tipo')">
       <PlusIcon class="tipos-veiculo-new-tipo-btn-icon" aria-hidden="true" />
       Novo Tipo
     </button>
@@ -13,6 +13,10 @@
 
 <script setup lang="ts">
 import { PlusIcon } from '@heroicons/vue/24/outline'
+
+defineEmits<{
+  'new-tipo': []
+}>()
 </script>
 
 <style scoped>

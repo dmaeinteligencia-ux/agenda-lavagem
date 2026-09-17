@@ -10,24 +10,35 @@
           </tr>
         </thead>
         <tbody>
-          <TipoVeiculoTableRow v-for="tipo in tipos" :key="tipo.id" :tipo="tipo" />
+          <TipoVeiculoTableRow
+            v-for="tipo in tipos"
+            :key="tipo.id"
+            :tipo="tipo"
+            :excluindo="excluindoId === tipo.id"
+            @editar="$emit('editar', $event)"
+            @excluir="$emit('excluir', $event)"
+          />
         </tbody>
       </table>
     </div>
-
-    <TiposVeiculoPagination />
   </div>
-
-  <TiposVeiculoEmptyState v-if="tipos.length === 0" />
 </template>
 
 <script setup lang="ts">
 import TipoVeiculoTableRow from './TipoVeiculoTableRow.vue'
-import TiposVeiculoPagination from './TiposVeiculoPagination.vue'
-import TiposVeiculoEmptyState from './TiposVeiculoEmptyState.vue'
-import { tiposVeiculoMock } from '@/utils/tiposVeiculoMock'
+import type { TipoVeiculo } from '@/utils/tiposVeiculo'
 
-const tipos = tiposVeiculoMock
+interface Props {
+  tipos: TipoVeiculo[]
+  excluindoId: string | null
+}
+
+defineProps<Props>()
+
+defineEmits<{
+  editar: [tipo: TipoVeiculo]
+  excluir: [tipo: TipoVeiculo]
+}>()
 </script>
 
 <style scoped>

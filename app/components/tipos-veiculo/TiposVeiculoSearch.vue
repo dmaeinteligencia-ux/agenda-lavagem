@@ -7,7 +7,9 @@
         id="tipos-veiculo-search"
         class="tipos-veiculo-search-input"
         type="text"
+        :value="modelValue"
         placeholder="Pesquisar tipo de veículo..."
+        @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       />
     </div>
   </div>
@@ -15,6 +17,16 @@
 
 <script setup lang="ts">
 import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
+
+interface Props {
+  modelValue: string
+}
+
+defineProps<Props>()
+
+defineEmits<{
+  'update:modelValue': [value: string]
+}>()
 </script>
 
 <style scoped>

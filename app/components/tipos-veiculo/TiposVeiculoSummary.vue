@@ -1,29 +1,21 @@
 <template>
   <div class="tipos-veiculo-summary">
     <AgendaSummaryCard
-      title="Total de Tipos"
-      :value="summary.total"
-      description="Na frota"
-      :icon="TruckIcon"
-      variant="blue"
-    />
-    <AgendaSummaryCard
-      title="Tipos Configurados"
-      :value="summary.tipos"
+      title="Tipos de veículo"
+      :value="String(summary.total)"
       description="Cadastrados no sistema"
       :icon="CubeIcon"
-      variant="amber"
+      variant="blue"
     />
   </div>
 </template>
 
 <script setup lang="ts">
 import AgendaSummaryCard from '@/components/agenda/AgendaSummaryCard.vue'
-import { TruckIcon, CubeIcon } from '@heroicons/vue/24/outline'
+import { CubeIcon } from '@heroicons/vue/24/outline'
 
 interface TiposVeiculoSummaryData {
-  total: string
-  tipos: string
+  total: number
 }
 
 interface Props {
@@ -36,7 +28,7 @@ defineProps<Props>()
 <style scoped>
 .tipos-veiculo-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
 }
 

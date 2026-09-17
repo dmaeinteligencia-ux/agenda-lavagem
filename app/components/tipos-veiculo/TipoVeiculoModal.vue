@@ -4,7 +4,7 @@
       class="tipos-veiculo-modal"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="`tipos-veiculo-modal-title-${mode}`"
+      :aria-labelledby="`tipos-veiculo-modal-title-${mode}`"
     >
       <header class="tipos-veiculo-modal-header">
         <div class="tipos-veiculo-modal-header-text">
@@ -12,31 +12,49 @@
             {{ mode === 'edit' ? 'Editar Tipo de Veículo' : 'Novo Tipo de Veículo' }}
           </h2>
           <p class="tipos-veiculo-modal-subtitle">
-            {{ mode === 'edit' ? 'Atualize as informações do tipo de veículo.' : 'Cadastre um tipo de veículo e defina o tempo estimado de lavagem.' }}
+            {{
+              mode === 'edit'
+                ? 'Atualize as informações do tipo de veículo.'
+                : 'Cadastre um tipo de veículo e defina o tempo estimado de lavagem.'
+            }}
           </p>
         </div>
         <button
           type="button"
           class="tipos-veiculo-modal-close"
           aria-label="Fechar"
+          @click="$emit('close')"
         >
           <XMarkIcon aria-hidden="true" />
         </button>
       </header>
 
       <div class="tipos-veiculo-modal-body">
-        <TiposVeiculoForm :mode="mode" />
+        <TipoVeiculoForm
+          ref="formRef"
+          :initial-data="tipo"
+          :mode="mode"
+          @update:form-data="formData = $event"
+        />
+        <p v-if="error" class="tipos-veiculo-modal-error" role="alert">{{ error }}</p>
       </div>
 
       <footer class="tipos-veiculo-modal-footer">
-        <button type="button" class="tipos-veiculo-modal-btn tipos-veiculo-modal-btn--secondary">
+        <button
+          type="button"
+          class="tipos-veiculo-modal-btn tipos-veiculo-modal-btn--secondary"
+          :disabled="loading"
+          @click="$emit('close')"
+        >
           Cancelar
         </button>
         <button
           type="button"
           class="tipos-veiculo-modal-btn tipos-veiculo-modal-btn--primary"
+          :disabled="loading"
+          @click="onSave"
         >
-          {{ mode === 'edit' ? 'Salvar alterações' : 'Salvar' }}
+          {{ loading ? 'Salvando...' : mode === 'edit' ? 'Salvar alterações' : 'Salvar' }}
         </button>
       </footer>
     </div>
@@ -44,16 +62,38 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
-import TiposVeiculoForm from './TipoVeiculoForm.vue'
+import TipoVeiculoForm from './TipoVeiculoForm.vue'
+import type { TipoVeiculo, TipoVeiculoFormData } from '@/utils/tiposVeiculo'
 
 interface Props {
   mode?: 'create' | 'edit'
+  tipo?: TipoVeiculo | null
+  loading?: boolean
+  error?: string | null
 }
 
 withDefaults(defineProps<Props>(), {
-  mode: 'create'
+  mode: 'create',
+  tipo: null,
+  loading: false,
+  error: null
 })
+
+const emit = defineEmits<{
+  close: []
+  save: [data: TipoVeiculoFormData]
+}>()
+
+const formRef = ref<InstanceType<typeof TipoVeiculoForm>>()
+const formData = ref<TipoVeiculoFormData>({ descricao: '', tempo_min: 0 })
+
+const onSave = () => {
+  if (formRef.value && formRef.value.validate()) {
+    emit('save', { ...formData.value })
+  }
+}
 </script>
 
 <style scoped>
@@ -145,6 +185,16 @@ withDefaults(defineProps<Props>(), {
   flex: 1;
 }
 
+.tipos-veiculo-modal-error {
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
 .tipos-veiculo-modal-footer {
   display: flex;
   align-items: center;
@@ -158,23 +208,30 @@ withDefaults(defineProps<Props>(), {
 
 .tipos-veiculo-modal-btn {
   display: inline-flex;
-  align-items: justify-content: center;
+  align-items: center;
+  justify-content: center;
   padding: 10px 22px;
   font-size: 14px;
   font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
+  border: 1px solid transparent;
   transition: background-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.1s;
+}
+
+.tipos-veiculo-modal-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .tipos-veiculo-modal-btn--primary {
   background-color: #004790;
   color: #fff;
-  border: 1px solid #004790;
+  border-color: #004790;
 }
 
-.tipos-veiculo-modal-btn--primary:hover {
+.tipos-veiculo-modal-btn--primary:hover:not(:disabled) {
   background-color: #003570;
   border-color: #003570;
 }
@@ -187,10 +244,10 @@ withDefaults(defineProps<Props>(), {
 .tipos-veiculo-modal-btn--secondary {
   background: #fff;
   color: #4b5563;
-  border: 1px solid #d1d5db;
+  border-color: #d1d5db;
 }
 
-.tipos-veiculo-modal-btn--secondary:hover {
+.tipos-veiculo-modal-btn--secondary:hover:not(:disabled) {
   background: #f3f4f6;
 }
 
@@ -232,3 +289,4 @@ withDefaults(defineProps<Props>(), {
     width: 100%;
   }
 }
+</style>
