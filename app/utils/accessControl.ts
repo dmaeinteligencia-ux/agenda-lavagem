@@ -4,6 +4,7 @@ export type RotaInterna =
   | '/'
   | '/agenda-lavador'
   | '/reservas'
+  | '/relatorios'
   | '/veiculos'
   | '/solicitantes'
   | '/tipos-veiculo'
@@ -20,6 +21,7 @@ const PERMISSOES: Record<Perfil, readonly RotaInterna[]> = {
     '/',
     '/agenda-lavador',
     '/reservas',
+    '/relatorios',
     '/veiculos',
     '/solicitantes',
     '/tipos-veiculo',
@@ -27,7 +29,7 @@ const PERMISSOES: Record<Perfil, readonly RotaInterna[]> = {
     '/calendario-operacional',
     '/usuarios'
   ],
-  GESTAO_FROTA: ['/', '/agenda-lavador', '/reservas', '/veiculos', '/solicitantes'],
+  GESTAO_FROTA: ['/', '/agenda-lavador', '/reservas', '/relatorios', '/veiculos', '/solicitantes'],
   LAVADOR: ['/agenda-lavador']
 }
 
