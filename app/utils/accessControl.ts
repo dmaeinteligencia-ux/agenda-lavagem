@@ -32,8 +32,8 @@ const PERMISSOES: Record<Perfil, readonly RotaInterna[]> = {
 }
 
 const ROTAS_INICIAIS: Record<Perfil, RotaInterna> = {
-  ADMIN: '/',
-  GESTAO_FROTA: '/',
+  ADMIN: '/agenda-lavador',
+  GESTAO_FROTA: '/agenda-lavador',
   LAVADOR: '/agenda-lavador'
 }
 

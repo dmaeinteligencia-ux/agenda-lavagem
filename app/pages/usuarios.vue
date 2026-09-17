@@ -156,7 +156,7 @@ onMounted(async () => {
     return
   }
 
-  await navigateTo('/')
+  await navigateTo('/agenda-lavador')
 })
 </script>
 

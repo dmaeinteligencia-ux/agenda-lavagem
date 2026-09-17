@@ -1,7 +1,11 @@
 <template>
-  <DashboardMain />
+  <div />
 </template>
 
 <script setup lang="ts">
-import DashboardMain from '@/components/DashboardMain.vue'
+definePageMeta({
+  middleware: [
+    () => navigateTo('/agenda-lavador', { replace: true })
+  ]
+})
 </script>

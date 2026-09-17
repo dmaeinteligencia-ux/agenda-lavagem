@@ -49,7 +49,6 @@
 import { computed } from 'vue'
 import type { Component } from 'vue'
 import {
-  HomeIcon,
   CalendarDaysIcon,
   DocumentTextIcon,
   TruckIcon,
@@ -74,7 +73,6 @@ type SidebarEntry =
   | { type: 'section'; label: string }
 
 const mainNavItems: SidebarLink[] = [
-  { label: 'Dashboard', icon: HomeIcon, route: '/' },
   { label: 'Agenda do Lavador', icon: CalendarDaysIcon, route: '/agenda-lavador' },
   { label: 'Reservas', icon: DocumentTextIcon, route: '/reservas' },
   { label: 'Veículos', icon: TruckIcon, route: '/veiculos' },
