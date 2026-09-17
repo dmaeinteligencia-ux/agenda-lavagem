@@ -374,18 +374,12 @@ export function descreverFiltros(
 
   if (tipo === 'LAVAGENS') {
     partes.push(`Status: ${STATUS_LABELS.CONCLUIDA}`)
-  } else if (tipo === 'OCORRENCIAS') {
+  } else if (tipo === 'OCORRENCIAS' && filtros.ocorrencia) {
     const ocorrencia = filtros.ocorrencia as StatusOcorrencia
-    partes.push(
-      filtros.ocorrencia
-        ? `Ocorrência: ${STATUS_LABELS[ocorrencia] ?? filtros.ocorrencia}`
-        : 'Ocorrências: todas'
-    )
-  } else if (tipo === 'RESERVAS') {
+    partes.push(`Ocorrência: ${STATUS_LABELS[ocorrencia] ?? filtros.ocorrencia}`)
+  } else if (tipo === 'RESERVAS' && filtros.status) {
     const status = filtros.status as ReservaStatus
-    partes.push(
-      filtros.status ? `Status: ${STATUS_LABELS[status] ?? filtros.status}` : 'Status: todos'
-    )
+    partes.push(`Status: ${STATUS_LABELS[status] ?? filtros.status}`)
   }
 
   if (filtros.tipoId) {
@@ -398,4 +392,12 @@ export function descreverFiltros(
   }
 
   return partes
+}
+
+export function textoFiltros(
+  tipo: TipoRelatorio,
+  filtros: RelatorioFiltros,
+  tipos: TipoVeiculoAdmin[]
+): string {
+  return descreverFiltros(tipo, filtros, tipos).join(' · ')
 }

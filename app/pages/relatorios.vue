@@ -65,9 +65,49 @@
           <h2 class="relatorios-resultado-titulo">{{ tituloRelatorio }}</h2>
           <p class="relatorios-resultado-periodo">Período: {{ periodoTexto }}</p>
         </div>
-        <button type="button" class="relatorios-imprimir-btn" @click="imprimir">
-          <PrinterIcon class="relatorios-imprimir-icon" aria-hidden="true" />
-          Imprimir
+        <div class="relatorios-resultado-acoes">
+          <button
+            type="button"
+            class="relatorios-acao-btn"
+            :disabled="exportandoExcel"
+            :aria-busy="exportandoExcel"
+            @click="exportarExcelClick"
+          >
+            <TableCellsIcon v-if="!exportandoExcel" class="relatorios-acao-icon" aria-hidden="true" />
+            <span v-else class="relatorios-acao-spinner" aria-hidden="true" />
+            {{ exportandoExcel ? 'Exportando...' : 'Exportar Excel' }}
+          </button>
+          <button
+            type="button"
+            class="relatorios-acao-btn"
+            :disabled="gerandoPdf"
+            :aria-busy="gerandoPdf"
+            @click="gerarPdfClick"
+          >
+            <DocumentArrowDownIcon v-if="!gerandoPdf" class="relatorios-acao-icon" aria-hidden="true" />
+            <span v-else class="relatorios-acao-spinner" aria-hidden="true" />
+            {{ gerandoPdf ? 'Gerando PDF...' : 'Gerar PDF' }}
+          </button>
+          <button type="button" class="relatorios-imprimir-btn" @click="imprimir">
+            <PrinterIcon class="relatorios-imprimir-icon" aria-hidden="true" />
+            Imprimir
+          </button>
+        </div>
+      </div>
+
+      <div
+        v-if="erroExportacao"
+        class="relatorios-feedback relatorios-feedback--error relatorios-no-print"
+        role="alert"
+      >
+        <span>{{ erroExportacao }}</span>
+        <button
+          type="button"
+          class="relatorios-feedback-close"
+          aria-label="Fechar"
+          @click="limparErroExportacao"
+        >
+          <XMarkIcon aria-hidden="true" />
         </button>
       </div>
 
@@ -99,7 +139,12 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
-import { PrinterIcon } from '@heroicons/vue/24/outline'
+import {
+  DocumentArrowDownIcon,
+  PrinterIcon,
+  TableCellsIcon,
+  XMarkIcon
+} from '@heroicons/vue/24/outline'
 import RelatoriosPageHeader from '@/components/relatorios/RelatoriosPageHeader.vue'
 import RelatorioTipoSelector from '@/components/relatorios/RelatorioTipoSelector.vue'
 import RelatorioFiltros from '@/components/relatorios/RelatorioFiltros.vue'
@@ -107,12 +152,13 @@ import RelatorioResumo from '@/components/relatorios/RelatorioResumo.vue'
 import RelatorioTabela from '@/components/relatorios/RelatorioTabela.vue'
 import RelatorioEmptyState from '@/components/relatorios/RelatorioEmptyState.vue'
 import { useRelatorios } from '@/composables/useRelatorios'
+import { useRelatoriosExport } from '@/composables/useRelatoriosExport'
+import type { RelatorioExportPayload } from '@/utils/relatoriosExport'
 import { formatarDataHora } from '@/utils/reservasAdmin'
 import {
   RELATORIOS_PAGE_SIZE,
   TIPO_RELATORIO_TITULOS,
   agruparPorVeiculo,
-  descreverFiltros,
   filtrarLinhas,
   formatarPeriodo,
   periodoInvalido as periodoEstaInvalido,
@@ -121,6 +167,7 @@ import {
   resumoOcorrencias,
   resumoPorVeiculo,
   resumoReservas,
+  textoFiltros,
   type RelatorioFiltros as RelatorioFiltrosState,
   type RelatorioLinha,
   type ResumoRelatorio,
@@ -134,6 +181,15 @@ definePageMeta({
 const PAGE_SIZE = RELATORIOS_PAGE_SIZE
 
 const { tipos, loading, error, carregarTipos, gerar } = useRelatorios()
+
+const {
+  exportandoExcel,
+  gerandoPdf,
+  erroExportacao,
+  exportarExcel,
+  gerarPdf,
+  limparErroExportacao
+} = useRelatoriosExport()
 
 const tipoRelatorio = ref<TipoRelatorio>('RESERVAS')
 const filtros = reactive<RelatorioFiltrosState>(relatorioFiltrosIniciais())
@@ -195,9 +251,16 @@ const periodoTexto = computed(() => formatarPeriodo(filtros.dataInicial, filtros
 const emitidoEmTexto = computed(() =>
   emitidoEm.value ? formatarDataHora(emitidoEm.value) : '—'
 )
-const filtrosTexto = computed(() =>
-  descreverFiltros(tipoRelatorio.value, filtros, tipos.value).join(' · ')
-)
+const filtrosTexto = computed(() => textoFiltros(tipoRelatorio.value, filtros, tipos.value))
+
+const exportPayload = computed<RelatorioExportPayload>(() => ({
+  tipo: tipoRelatorio.value,
+  filtros: { ...filtros },
+  tipos: tipos.value,
+  linhas: linhasFiltradas.value,
+  veiculos: veiculosAgrupados.value,
+  resumo: resumo.value
+}))
 
 const podeLimpar = computed(() => {
   const iniciais = relatorioFiltrosIniciais()
@@ -218,6 +281,7 @@ const gerarRelatorio = async () => {
   }
 
   pagina.value = 1
+  limparErroExportacao()
   const resultado = await gerar(filtros.dataInicial, filtros.dataFinal)
 
   linhasBase.value = resultado.linhas
@@ -231,6 +295,7 @@ const limparFiltros = () => {
   gerado.value = false
   pagina.value = 1
   emitidoEm.value = ''
+  limparErroExportacao()
 }
 
 const imprimir = async () => {
@@ -239,11 +304,20 @@ const imprimir = async () => {
   window.print()
 }
 
+const exportarExcelClick = () => {
+  exportarExcel(exportPayload.value)
+}
+
+const gerarPdfClick = () => {
+  gerarPdf(exportPayload.value)
+}
+
 watch(tipoRelatorio, () => {
   pagina.value = 1
   linhasBase.value = []
   gerado.value = false
   emitidoEm.value = ''
+  limparErroExportacao()
 })
 
 watch(filtros, () => {
@@ -388,6 +462,102 @@ onMounted(carregarTipos)
   height: 18px;
 }
 
+.relatorios-resultado-acoes {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.relatorios-acao-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #004790;
+  background: #fff;
+  border: 1.5px solid #004790;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.relatorios-acao-btn:hover:not(:disabled) {
+  background: #e8f0fe;
+}
+
+.relatorios-acao-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 71, 144, 0.3);
+}
+
+.relatorios-acao-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.relatorios-acao-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.relatorios-acao-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #c7dbf5;
+  border-top-color: #004790;
+  border-radius: 50%;
+  animation: relatorios-acao-spin 0.7s linear infinite;
+}
+
+@keyframes relatorios-acao-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.relatorios-feedback {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.relatorios-feedback--error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.relatorios-feedback-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.relatorios-feedback-close:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.relatorios-feedback-close svg {
+  width: 16px;
+  height: 16px;
+}
+
 .relatorios-print-only {
   display: none;
 }
@@ -433,6 +603,15 @@ onMounted(carregarTipos)
   .relatorios-page {
     padding: 16px 12px;
     gap: 16px;
+  }
+
+  .relatorios-resultado-acoes {
+    width: 100%;
+  }
+
+  .relatorios-acao-btn {
+    flex: 1 1 auto;
+    justify-content: center;
   }
 
   .relatorios-imprimir-btn {
