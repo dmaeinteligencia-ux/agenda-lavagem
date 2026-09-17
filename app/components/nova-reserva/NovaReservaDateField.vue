@@ -82,4 +82,18 @@ defineEmits<{
   border-color: #004790;
   box-shadow: 0 0 0 3px rgba(0, 71, 144, 0.15);
 }
+
+/*
+ * Mobile (inclui iPhone 11 / Safari iOS):
+ * o input[type="date"] reserva espaço para o indicador nativo e pode não
+ * respeitar o inset da esquerda como no desktop. Reservamos espaço interno
+ * para o ícone customizado (esquerda) e para o indicador nativo (direita),
+ * evitando a sobreposição do valor da data. Desktop/tablet não são afetados.
+ */
+@media (max-width: 600px) {
+  .nova-reserva-date-field-input {
+    padding-left: 42px;
+    padding-right: 32px;
+  }
+}
 </style>
