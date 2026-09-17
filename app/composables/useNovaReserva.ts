@@ -39,6 +39,39 @@ export interface ReservaCriada {
   observacao: string | null
 }
 
+export interface BuscarSolicitanteResult {
+  success: boolean
+  message: string | null
+  naoEncontrado: boolean
+}
+
+export interface CadastrarSolicitanteResult {
+  success: boolean
+  message: string | null
+}
+
+interface SupabaseErrorLike {
+  code?: string
+  message?: string
+}
+
+const mapCadastroSolicitanteError = (err: SupabaseErrorLike | null): string => {
+  if (!err) {
+    return 'Não foi possível cadastrar o solicitante.'
+  }
+
+  switch (err.code) {
+    case '23505':
+      return 'Já existe um solicitante cadastrado com esta matrícula.'
+    case '22023':
+      return 'Dados inválidos. Verifique nome, matrícula e telefone.'
+    case '42501':
+      return 'Operação não permitida.'
+    default:
+      return 'Não foi possível cadastrar o solicitante.'
+  }
+}
+
 export const useNovaReserva = () => {
   const supabase = useSupabaseClient()
 
@@ -52,10 +85,11 @@ export const useNovaReserva = () => {
   const buscandoVeiculo = ref(false)
   const consultandoDisponibilidade = ref(false)
   const criandoReserva = ref(false)
+  const cadastrandoSolicitante = ref(false)
 
   const error = ref<string | null>(null)
 
-  const buscarSolicitante = async (matricula: string): Promise<{ success: boolean; message: string | null }> => {
+  const buscarSolicitante = async (matricula: string): Promise<BuscarSolicitanteResult> => {
     buscandoSolicitante.value = true
     error.value = null
     solicitante.value = null
@@ -66,18 +100,52 @@ export const useNovaReserva = () => {
       })
 
       if (rpcError) {
-        return { success: false, message: rpcError.message || 'Não foi possível buscar o solicitante.' }
+        return {
+          success: false,
+          message: rpcError.message || 'Não foi possível buscar o solicitante.',
+          naoEncontrado: false
+        }
       }
 
       const linha = (data as SolicitanteBusca[])?.[0]
       if (!linha) {
-        return { success: false, message: 'Matrícula não encontrada.' }
+        return { success: false, message: null, naoEncontrado: true }
       }
 
       solicitante.value = linha
-      return { success: true, message: null }
+      return { success: true, message: null, naoEncontrado: false }
     } finally {
       buscandoSolicitante.value = false
+    }
+  }
+
+  const cadastrarSolicitante = async (
+    nome: string,
+    matricula: string,
+    telefone: string
+  ): Promise<CadastrarSolicitanteResult> => {
+    cadastrandoSolicitante.value = true
+
+    try {
+      const { data, error: rpcError } = await supabase.rpc('cadastrar_solicitante_publico', {
+        p_nome: nome.trim(),
+        p_matricula: matricula.trim(),
+        p_telefone: telefone.trim()
+      })
+
+      if (rpcError) {
+        return { success: false, message: mapCadastroSolicitanteError(rpcError) }
+      }
+
+      const linha = (data as SolicitanteBusca[])?.[0]
+      if (!linha) {
+        return { success: false, message: 'Não foi possível cadastrar o solicitante.' }
+      }
+
+      solicitante.value = { id: linha.id, matricula: linha.matricula, nome: linha.nome }
+      return { success: true, message: null }
+    } finally {
+      cadastrandoSolicitante.value = false
     }
   }
 
@@ -190,8 +258,10 @@ export const useNovaReserva = () => {
     buscandoVeiculo,
     consultandoDisponibilidade,
     criandoReserva,
+    cadastrandoSolicitante,
     error,
     buscarSolicitante,
+    cadastrarSolicitante,
     buscarVeiculo,
     consultarDisponibilidade,
     criarReserva,

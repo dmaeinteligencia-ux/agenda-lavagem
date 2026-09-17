@@ -24,7 +24,10 @@
           :solicitante="solicitante"
           :loading="buscandoSolicitante"
           :error="erroSolicitante"
+          :nao-encontrado="solicitanteNaoEncontrado"
+          :sucesso="sucessoSolicitante"
           @buscar="aoBuscarSolicitante"
+          @cadastrar="abrirCadastroSolicitante"
         />
         <NovaReservaVehicleCard
           :key="`veiculo-${formKey}`"
@@ -70,6 +73,15 @@
       @cancelar="aoCancelar"
     />
 
+    <NovaReservaSolicitanteCadastroModal
+      v-if="modalCadastroAberto"
+      :matricula="matriculaCadastro"
+      :loading="cadastrandoSolicitante"
+      :error="erroCadastro"
+      @close="fecharCadastroSolicitante"
+      @salvar="aoSalvarCadastro"
+    />
+
     <div v-if="mostrarConfirmacaoCancelar" class="nova-reserva-confirm-overlay" role="presentation">
       <div class="nova-reserva-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="nova-reserva-confirm-title">
         <h3 id="nova-reserva-confirm-title" class="nova-reserva-confirm-title">Cancelar nova reserva</h3>
@@ -93,6 +105,7 @@ import { CheckCircleIcon } from '@heroicons/vue/24/outline'
 import NovaReservaPageHeader from '@/components/nova-reserva/NovaReservaPageHeader.vue'
 import NovaReservaSteps from '@/components/nova-reserva/NovaReservaSteps.vue'
 import NovaReservaSolicitanteCard from '@/components/nova-reserva/NovaReservaSolicitanteCard.vue'
+import NovaReservaSolicitanteCadastroModal from '@/components/nova-reserva/NovaReservaSolicitanteCadastroModal.vue'
 import NovaReservaVehicleCard from '@/components/nova-reserva/NovaReservaVehicleCard.vue'
 import NovaReservaDateCard from '@/components/nova-reserva/NovaReservaDateCard.vue'
 import NovaReservaAvailabilityCard from '@/components/nova-reserva/NovaReservaAvailabilityCard.vue'
@@ -115,7 +128,9 @@ const {
   buscandoVeiculo,
   consultandoDisponibilidade,
   criandoReserva,
+  cadastrandoSolicitante,
   buscarSolicitante,
+  cadastrarSolicitante,
   buscarVeiculo,
   consultarDisponibilidade,
   criarReserva,
@@ -128,6 +143,12 @@ const erroGeral = ref<string | null>(null)
 const observacao = ref('')
 const formKey = ref(0)
 const mostrarConfirmacaoCancelar = ref(false)
+
+const solicitanteNaoEncontrado = ref(false)
+const sucessoSolicitante = ref<string | null>(null)
+const modalCadastroAberto = ref(false)
+const matriculaCadastro = ref('')
+const erroCadastro = ref<string | null>(null)
 
 const minDate = toISODate(new Date())
 
@@ -244,10 +265,48 @@ const formularioPreenchido = computed(() => {
 
 async function aoBuscarSolicitante(matricula: string) {
   erroSolicitante.value = null
+  sucessoSolicitante.value = null
+  solicitanteNaoEncontrado.value = false
+
   const r = await buscarSolicitante(matricula)
-  if (!r.success) {
-    erroSolicitante.value = r.message
+
+  if (r.success) {
+    return
   }
+
+  if (r.naoEncontrado) {
+    matriculaCadastro.value = matricula.trim()
+    solicitanteNaoEncontrado.value = true
+    return
+  }
+
+  erroSolicitante.value = r.message
+}
+
+function abrirCadastroSolicitante() {
+  erroCadastro.value = null
+  modalCadastroAberto.value = true
+}
+
+function fecharCadastroSolicitante() {
+  modalCadastroAberto.value = false
+  erroCadastro.value = null
+}
+
+async function aoSalvarCadastro(data: { nome: string; matricula: string; telefone: string }) {
+  erroCadastro.value = null
+
+  const r = await cadastrarSolicitante(data.nome, data.matricula, data.telefone)
+
+  if (!r.success) {
+    erroCadastro.value = r.message
+    return
+  }
+
+  modalCadastroAberto.value = false
+  solicitanteNaoEncontrado.value = false
+  erroSolicitante.value = null
+  sucessoSolicitante.value = 'Solicitante cadastrado com sucesso.'
 }
 
 async function aoBuscarVeiculo(placa: string) {
@@ -291,6 +350,11 @@ function descartarFormulario() {
   erroVeiculo.value = null
   erroGeral.value = null
   observacao.value = ''
+  solicitanteNaoEncontrado.value = false
+  sucessoSolicitante.value = null
+  modalCadastroAberto.value = false
+  matriculaCadastro.value = ''
+  erroCadastro.value = null
   formKey.value += 1
 }
 

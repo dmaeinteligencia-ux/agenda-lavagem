@@ -34,6 +34,19 @@
 
       <p v-if="error" class="nova-reserva-solicitante-error" role="alert">{{ error }}</p>
 
+      <p v-if="sucesso" class="nova-reserva-solicitante-sucesso" role="status">{{ sucesso }}</p>
+
+      <div v-if="naoEncontrado && !solicitante" class="nova-reserva-solicitante-nao-encontrado">
+        <p class="nova-reserva-solicitante-nao-encontrado-text">Solicitante não encontrado.</p>
+        <button
+          type="button"
+          class="nova-reserva-solicitante-cadastrar-btn"
+          @click="$emit('cadastrar')"
+        >
+          Cadastrar como solicitante
+        </button>
+      </div>
+
       <div v-if="solicitante" class="nova-reserva-solicitante-info">
         <UserIcon class="nova-reserva-solicitante-info-icon" aria-hidden="true" />
         <div class="nova-reserva-solicitante-info-text">
@@ -55,12 +68,15 @@ interface Props {
   solicitante: SolicitanteBusca | null
   loading: boolean
   error: string | null
+  naoEncontrado: boolean
+  sucesso: string | null
 }
 
 defineProps<Props>()
 
 const emit = defineEmits<{
   buscar: [matricula: string]
+  cadastrar: []
 }>()
 
 const matricula = ref('')
@@ -230,6 +246,56 @@ const buscar = () => {
   border: 1px solid #fecaca;
   border-radius: 8px;
   font-size: 13px;
+}
+
+.nova-reserva-solicitante-sucesso {
+  margin: 0;
+  padding: 10px 12px;
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.nova-reserva-solicitante-nao-encontrado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.nova-reserva-solicitante-nao-encontrado-text {
+  margin: 0;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.nova-reserva-solicitante-cadastrar-btn {
+  padding: 9px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background-color: #004790;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.nova-reserva-solicitante-cadastrar-btn:hover {
+  background-color: #003570;
+}
+
+.nova-reserva-solicitante-cadastrar-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 71, 144, 0.3);
 }
 
 .nova-reserva-solicitante-info {
