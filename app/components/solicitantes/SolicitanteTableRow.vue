@@ -27,10 +27,10 @@
 
 <script setup lang="ts">
 import { PencilSquareIcon } from '@heroicons/vue/24/outline'
-import type { SolicitanteMock } from '@/utils/solicitantesMock'
+import type { Solicitante } from '@/utils/solicitantes'
 
 interface Props {
-  solicitante: SolicitanteMock
+  solicitante: Solicitante
 }
 
 defineProps<Props>()

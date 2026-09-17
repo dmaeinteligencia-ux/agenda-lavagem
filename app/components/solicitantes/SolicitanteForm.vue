@@ -43,10 +43,10 @@
 
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue'
-import type { SolicitanteMock, SolicitanteFormData } from '@/utils/solicitantesMock'
+import type { Solicitante, SolicitanteFormData } from '@/utils/solicitantes'
 
 interface Props {
-  initialData?: SolicitanteMock | null
+  initialData?: Solicitante | null
   mode?: 'create' | 'edit'
 }
 

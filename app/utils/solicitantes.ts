@@ -1,4 +1,4 @@
-export interface SolicitanteMock {
+export interface Solicitante {
   id: string
   matricula: string
   nome: string

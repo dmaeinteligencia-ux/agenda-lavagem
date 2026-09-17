@@ -61,11 +61,11 @@
 import { ref } from 'vue'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
 import SolicitanteForm from './SolicitanteForm.vue'
-import type { SolicitanteMock, SolicitanteFormData } from '@/utils/solicitantesMock'
+import type { Solicitante, SolicitanteFormData } from '@/utils/solicitantes'
 
 interface Props {
   mode?: 'create' | 'edit'
-  solicitante?: SolicitanteMock | null
+  solicitante?: Solicitante | null
   loading?: boolean
   error?: string | null
 }

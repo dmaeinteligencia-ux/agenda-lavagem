@@ -44,7 +44,7 @@ import SolicitantesSearch from '@/components/solicitantes/SolicitantesSearch.vue
 import SolicitantesTable from '@/components/solicitantes/SolicitantesTable.vue'
 import SolicitanteModal from '@/components/solicitantes/SolicitanteModal.vue'
 import { useSolicitantes } from '@/composables/useSolicitantes'
-import type { SolicitanteMock, SolicitanteFormData } from '@/utils/solicitantesMock'
+import type { Solicitante, SolicitanteFormData } from '@/utils/solicitantes'
 
 definePageMeta({
   layout: 'default'
@@ -62,7 +62,7 @@ const {
 const searchQuery = ref('')
 const showModal = ref(false)
 const modalMode = ref<'create' | 'edit'>('create')
-const solicitanteEdicao = ref<SolicitanteMock | null>(null)
+const solicitanteEdicao = ref<Solicitante | null>(null)
 const saving = ref(false)
 const saveError = ref<string | null>(null)
 
@@ -94,7 +94,7 @@ const openCreate = () => {
   showModal.value = true
 }
 
-const openEdit = (solicitante: SolicitanteMock) => {
+const openEdit = (solicitante: Solicitante) => {
   modalMode.value = 'edit'
   solicitanteEdicao.value = { ...solicitante }
   saveError.value = null

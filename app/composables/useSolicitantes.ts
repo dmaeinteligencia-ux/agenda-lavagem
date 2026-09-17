@@ -1,4 +1,4 @@
-import type { SolicitanteMock, SolicitanteFormData } from '@/utils/solicitantesMock'
+import type { Solicitante, SolicitanteFormData } from '@/utils/solicitantes'
 
 interface SolicitanteErro {
   code?: string
@@ -6,14 +6,14 @@ interface SolicitanteErro {
 }
 
 interface SolicitanteResult {
-  data: SolicitanteMock | null
+  data: Solicitante | null
   error: SolicitanteErro | null
 }
 
 export const useSolicitantes = () => {
   const supabase = useSupabaseClient()
 
-  const solicitantes = ref<SolicitanteMock[]>([])
+  const solicitantes = ref<Solicitante[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -34,7 +34,7 @@ export const useSolicitantes = () => {
       return
     }
 
-    solicitantes.value = (data as SolicitanteMock[]) ?? []
+    solicitantes.value = (data as Solicitante[]) ?? []
   }
 
   const createSolicitante = async (input: SolicitanteFormData): Promise<SolicitanteResult> => {
@@ -49,7 +49,7 @@ export const useSolicitantes = () => {
       .single()
 
     return {
-      data: (data as SolicitanteMock | null) ?? null,
+      data: (data as Solicitante | null) ?? null,
       error: createError
     }
   }
@@ -67,7 +67,7 @@ export const useSolicitantes = () => {
       .single()
 
     return {
-      data: (data as SolicitanteMock | null) ?? null,
+      data: (data as Solicitante | null) ?? null,
       error: updateError
     }
   }

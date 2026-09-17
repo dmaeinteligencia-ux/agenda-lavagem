@@ -20,8 +20,6 @@
         </tbody>
       </table>
     </div>
-
-    <SolicitantesPagination :total="solicitantes.length" />
   </div>
 
   <SolicitantesEmptyState
@@ -33,19 +31,18 @@
 
 <script setup lang="ts">
 import SolicitanteTableRow from './SolicitanteTableRow.vue'
-import SolicitantesPagination from './SolicitantesPagination.vue'
 import SolicitantesEmptyState from './SolicitantesEmptyState.vue'
-import type { SolicitanteMock } from '@/utils/solicitantesMock'
+import type { Solicitante } from '@/utils/solicitantes'
 
 interface Props {
-  solicitantes: SolicitanteMock[]
+  solicitantes: Solicitante[]
   hasSolicitantes: boolean
 }
 
 defineProps<Props>()
 
 defineEmits<{
-  edit: [solicitante: SolicitanteMock]
+  edit: [solicitante: Solicitante]
   'new-solicitante': []
 }>()
 </script>
