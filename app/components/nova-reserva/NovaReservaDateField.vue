@@ -85,14 +85,31 @@ defineEmits<{
 
 /*
  * Mobile (inclui iPhone 11 / Safari iOS):
- * o input[type="date"] reserva espaço para o indicador nativo e pode não
- * respeitar o inset da esquerda como no desktop. Reservamos espaço interno
- * para o ícone customizado (esquerda) e para o indicador nativo (direita),
- * evitando a sobreposição do valor da data. Desktop/tablet não são afetados.
+ * o Safari iOS não respeita de forma confiável o inset interno do
+ * input[type="date"], fazendo o valor da data sobrepor o ícone absoluto.
+ * Solução: no mobile o wrapper vira flex; o ícone passa a ocupar uma área
+ * própria (fora do input) e o input usa flex: 1, aproveitando toda a largura
+ * restante do card. Desktop/tablet permanecem inalterados.
  */
 @media (max-width: 600px) {
+  .nova-reserva-date-field-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .nova-reserva-date-field-icon {
+    position: static;
+    transform: none;
+    flex: 0 0 auto;
+  }
+
   .nova-reserva-date-field-input {
-    padding-left: 42px;
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    padding-left: 12px;
     padding-right: 32px;
   }
 }
