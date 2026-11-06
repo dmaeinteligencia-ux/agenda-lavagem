@@ -1,0 +1,9 @@
+{
+  "nome": "Agenda de Lavagem",
+  "slug": "agenda-lavagem",
+  "descricao": "Agendamento e controle da lavagem dos veículos da frota do DMAE, com agenda dos lavadores e relatórios.",
+  "area": "Frota",
+  "status": "producao",
+  "url": "https://agenda-lavagem.vercel.app",
+  "portal": true
+}
