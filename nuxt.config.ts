@@ -5,6 +5,12 @@ export default defineNuxtConfig({
   supabase: {
     redirectOptions: {
       exclude: ['/nova-reserva']
+    },
+    // SameSite=None permite manter a sessão quando a Agenda está embutida no Portal do Núcleo (iframe).
+    cookieOptions: {
+      maxAge: 60 * 60 * 8,
+      sameSite: 'none',
+      secure: true
     }
   }
 })
